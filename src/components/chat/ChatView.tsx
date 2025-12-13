@@ -214,112 +214,157 @@ export function ChatView({
             </div>
           </div>
         ) : (
-          /* Conversation with large Bloom on the left */
-          <div className="max-w-4xl mx-auto flex gap-6">
-            {/* Large Bloom character - fixed on the left */}
-            <div className="hidden md:flex flex-col items-center sticky top-24 h-fit">
-              <BloomFlower 
-                className="w-40 h-48 lg:w-52 lg:h-60" 
-                speaking={isLoading}
-                growthStage={growthStage}
-                sparkling={hasRecommendations}
-              />
-              <p className="text-sm text-muted-foreground mt-2 text-center max-w-[160px]">
-                {isLoading 
-                  ? (language === 'en' ? "I'm thinking..." : "Ik denk na...")
-                  : (language === 'en' ? "I'm here to help!" : "Ik ben er om te helpen!")
-                }
-              </p>
-            </div>
-
-            {/* Chat messages area */}
-            <div className="flex-1 min-w-0">
-              {/* Mobile Bloom - shows above messages on mobile */}
-              <div className="flex md:hidden justify-center mb-6">
-                <BloomFlower 
-                  className="w-28 h-32" 
-                  speaking={isLoading}
-                  growthStage={growthStage}
-                  sparkling={hasRecommendations}
-                />
-              </div>
-
-              <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <MessageCard
-                    key={message.id}
-                    message={message}
-                    language={language}
-                    index={index}
-                    isLatest={false}
-                    isLoading={false}
-                    growthStage={0}
-                    sparkling={false}
-                  />
-                ))}
-
-                {/* Loading state */}
-                {isLoading && (
-                  <div className="animate-fade-in">
-                    <div className="bg-card border-2 border-border/50 rounded-2xl p-4 max-w-[85%]">
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-1">
-                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          /* Conversation with large Bloom alongside messages */
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-6">
+              {messages.map((message, index) => {
+                const isAssistant = message.role === 'assistant';
+                const isLatestAssistant = isAssistant && 
+                  index === messages.map((m, i) => m.role === 'assistant' ? i : -1).filter(i => i !== -1).pop();
+                
+                return (
+                  <div key={message.id} className="animate-fade-in">
+                    {isAssistant ? (
+                      /* Assistant message with Bloom alongside */
+                      <div className="flex gap-4 items-start">
+                        {/* Large Bloom next to assistant messages */}
+                        <div className="hidden md:flex flex-col items-center flex-shrink-0">
+                          <BloomFlower 
+                            className={`transition-all duration-500 ${isLatestAssistant ? 'w-32 h-40 lg:w-40 lg:h-48' : 'w-20 h-24 opacity-60'}`}
+                            speaking={isLoading && isLatestAssistant}
+                            growthStage={growthStage}
+                            sparkling={hasRecommendations && isLatestAssistant}
+                          />
+                          {isLatestAssistant && (
+                            <p className="text-xs text-muted-foreground mt-1 text-center max-w-[120px]">
+                              {isLoading 
+                                ? (language === 'en' ? "Thinking..." : "Denkt na...")
+                                : (language === 'en' ? "I'm here!" : "Ik ben er!")
+                              }
+                            </p>
+                          )}
                         </div>
-                        <span className="text-sm text-muted-foreground italic">
-                          {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
-                        </span>
+                        
+                        {/* Mobile: smaller Bloom inline */}
+                        <div className="flex md:hidden flex-shrink-0">
+                          <BloomFlower 
+                            className={`transition-all duration-500 ${isLatestAssistant ? 'w-16 h-20' : 'w-10 h-12 opacity-60'}`}
+                            speaking={isLoading && isLatestAssistant}
+                            growthStage={growthStage}
+                            sparkling={hasRecommendations && isLatestAssistant}
+                          />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <MessageCard
+                            message={message}
+                            language={language}
+                            index={index}
+                            isLatest={isLatestAssistant || false}
+                            isLoading={isLoading}
+                            growthStage={growthStage}
+                            sparkling={hasRecommendations}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* User message - right aligned, no Bloom */
+                      <div className="flex justify-end md:pl-44">
+                        <MessageCard
+                          message={message}
+                          language={language}
+                          index={index}
+                          isLatest={false}
+                          isLoading={false}
+                          growthStage={growthStage}
+                          sparkling={false}
+                        />
+                      </div>
+                    )}
                   </div>
-                )}
+                );
+              })}
 
-                {/* Quick replies */}
-                {quickReplies.length > 0 && !isLoading && (
-                  <div className="flex flex-wrap gap-2">
-                    {quickReplies.map((reply, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          onSendMessage(reply);
-                          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                        }}
-                        className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 hover:scale-105 transition-all"
-                      >
-                        {reply}
-                      </button>
-                    ))}
+              {/* Loading state with Bloom */}
+              {isLoading && (
+                <div className="flex gap-4 items-start animate-fade-in">
+                  <div className="hidden md:flex flex-col items-center flex-shrink-0">
+                    <BloomFlower 
+                      className="w-32 h-40 lg:w-40 lg:h-48"
+                      speaking={true}
+                      growthStage={growthStage}
+                      sparkling={false}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1 text-center">
+                      {language === 'en' ? "Thinking..." : "Denkt na..."}
+                    </p>
                   </div>
-                )}
-              </div>
-
-              {/* Input area */}
-              <div className="sticky bottom-4 mt-6">
-                <div className="bg-background/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <ChatInputBox
-                        onSend={(msg) => {
-                          onSendMessage(msg);
-                          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                        }}
-                        isLoading={isLoading}
-                        placeholder={language === 'en' ? 'Type your message...' : 'Typ je bericht...'}
-                      />
-                    </div>
-                    <SpeechButton
-                      onTranscript={handleSpeechTranscript}
-                      disabled={isLoading}
-                      language={language}
+                  <div className="flex md:hidden flex-shrink-0">
+                    <BloomFlower 
+                      className="w-16 h-20"
+                      speaking={true}
+                      growthStage={growthStage}
+                      sparkling={false}
                     />
                   </div>
+                  <div className="bg-card border-2 border-border/50 rounded-2xl p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                      <span className="text-sm text-muted-foreground italic">
+                        {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick replies */}
+              {quickReplies.length > 0 && !isLoading && (
+                <div className="flex flex-wrap gap-2 md:pl-44">
+                  {quickReplies.map((reply, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        onSendMessage(reply);
+                        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                      }}
+                      className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 hover:scale-105 transition-all"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Input area */}
+            <div className="sticky bottom-4 mt-6">
+              <div className="bg-background/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <ChatInputBox
+                      onSend={(msg) => {
+                        onSendMessage(msg);
+                        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                      }}
+                      isLoading={isLoading}
+                      placeholder={language === 'en' ? 'Type your message...' : 'Typ je bericht...'}
+                    />
+                  </div>
+                  <SpeechButton
+                    onTranscript={handleSpeechTranscript}
+                    disabled={isLoading}
+                    language={language}
+                  />
                 </div>
               </div>
-
-              <div ref={bottomRef} />
             </div>
+
+            <div ref={bottomRef} />
           </div>
         )}
 
