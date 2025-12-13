@@ -214,86 +214,90 @@ export function ChatView({
             </div>
           </div>
         ) : (
-          /* Conversation with Bloom following along */
-          <div className="max-w-2xl mx-auto">
-            {/* Messages with Bloom appearing next to each assistant message */}
-            <div className="space-y-4">
-              {messages.map((message, index) => {
-                const isLastAssistantMessage = 
-                  message.role === 'assistant' && 
-                  index === messages.filter(m => m.role === 'assistant').length * 2 - 1;
-                
-                return (
+          /* Conversation with large Bloom on the left */
+          <div className="max-w-4xl mx-auto flex gap-6">
+            {/* Large Bloom character - fixed on the left */}
+            <div className="hidden md:flex flex-col items-center sticky top-24 h-fit">
+              <BloomFlower 
+                className="w-40 h-48 lg:w-52 lg:h-60" 
+                speaking={isLoading}
+                growthStage={growthStage}
+                sparkling={hasRecommendations}
+              />
+              <p className="text-sm text-muted-foreground mt-2 text-center max-w-[160px]">
+                {isLoading 
+                  ? (language === 'en' ? "I'm thinking..." : "Ik denk na...")
+                  : (language === 'en' ? "I'm here to help!" : "Ik ben er om te helpen!")
+                }
+              </p>
+            </div>
+
+            {/* Chat messages area */}
+            <div className="flex-1 min-w-0">
+              {/* Mobile Bloom - shows above messages on mobile */}
+              <div className="flex md:hidden justify-center mb-6">
+                <BloomFlower 
+                  className="w-28 h-32" 
+                  speaking={isLoading}
+                  growthStage={growthStage}
+                  sparkling={hasRecommendations}
+                />
+              </div>
+
+              <div className="space-y-4">
+                {messages.map((message, index) => (
                   <MessageCard
                     key={message.id}
                     message={message}
                     language={language}
                     index={index}
-                    isLatest={index === messages.length - 1 || isLastAssistantMessage}
-                    isLoading={isLoading}
-                    growthStage={growthStage}
-                    sparkling={hasRecommendations}
-                  />
-                );
-              })}
-
-              {/* Loading state - Bloom is typing */}
-              {isLoading && (
-                <div className="flex items-end gap-3 animate-fade-in">
-                  <BloomFlower 
-                    className="w-14 h-16 md:w-16 md:h-20 shrink-0" 
-                    speaking={true}
-                    growthStage={growthStage}
+                    isLatest={false}
+                    isLoading={false}
+                    growthStage={0}
                     sparkling={false}
                   />
-                  <div className="bg-card border-2 border-border/50 rounded-2xl rounded-bl-sm p-4 max-w-[80%]">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                ))}
+
+                {/* Loading state */}
+                {isLoading && (
+                  <div className="animate-fade-in">
+                    <div className="bg-card border-2 border-border/50 rounded-2xl p-4 max-w-[85%]">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                        <span className="text-sm text-muted-foreground italic">
+                          {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground italic">
-                        {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
-                      </span>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Quick replies */}
-              {quickReplies.length > 0 && !isLoading && (
-                <div className="flex flex-wrap gap-2 ml-16 md:ml-20">
-                  {quickReplies.map((reply, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        onSendMessage(reply);
-                        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                      }}
-                      className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 hover:scale-105 transition-all"
-                    >
-                      {reply}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                {/* Quick replies */}
+                {quickReplies.length > 0 && !isLoading && (
+                  <div className="flex flex-wrap gap-2">
+                    {quickReplies.map((reply, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          onSendMessage(reply);
+                          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                        }}
+                        className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 hover:scale-105 transition-all"
+                      >
+                        {reply}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            {/* Input area with mini Bloom */}
-            <div className="sticky bottom-4 mt-6">
-              <div className="flex items-end gap-3">
-                {/* Mini Bloom waiting for input */}
-                <div className="shrink-0 hidden md:block">
-                  <BloomFlower 
-                    className="w-12 h-14" 
-                    speaking={false}
-                    growthStage={growthStage}
-                    sparkling={hasRecommendations}
-                  />
-                </div>
-                
-                <div className="flex-1 bg-background/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30">
+              {/* Input area */}
+              <div className="sticky bottom-4 mt-6">
+                <div className="bg-background/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30">
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
                       <ChatInputBox
@@ -313,15 +317,15 @@ export function ChatView({
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div ref={bottomRef} />
+              <div ref={bottomRef} />
+            </div>
           </div>
         )}
 
         {/* Another quote at the bottom */}
         {messages.length > 3 && (
-          <div className="max-w-2xl mx-auto mt-16">
+          <div className="max-w-4xl mx-auto mt-16">
             <QuoteCard quote={quotes[messages.length % quotes.length]} language={language} />
           </div>
         )}
