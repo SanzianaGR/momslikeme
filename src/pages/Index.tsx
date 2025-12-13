@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { ChatView } from '@/components/chat/ChatView';
 import { ForumView } from '@/components/forum/ForumView';
 import { MyBenefitsView } from '@/components/mybenefits/MyBenefitsView';
+import { AllBenefitsView } from '@/components/benefits/AllBenefitsView';
 import { useChat } from '@/hooks/useChat';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Task, Benefit } from '@/types';
 import { cn } from '@/lib/utils';
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'chat' | 'benefits' | 'forum'>('chat');
+  const [currentView, setCurrentView] = useState<'chat' | 'mybenefits' | 'allbenefits' | 'forum'>('chat');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const { language, toggleLanguage } = useLanguage();
@@ -54,9 +55,10 @@ const Index = () => {
   const handleToggleStep = (taskId: string, stepId: string) => {
     setTasks(prev => prev.map(task => {
       if (task.id !== taskId) return task;
+      const steps = task.steps || [];
       return {
         ...task,
-        steps: task.steps.map(step => 
+        steps: steps.map(step => 
           step.id === stepId ? { ...step, completed: !step.completed } : step
         ),
       };
@@ -70,7 +72,8 @@ const Index = () => {
 
   const t = {
     bloom: 'Bloom',
-    myBenefits: language === 'en' ? 'My Benefits' : 'Mijn Voordelen',
+    myBenefits: language === 'en' ? 'My List' : 'Mijn Lijst',
+    allBenefits: language === 'en' ? 'All Benefits' : 'Alle Regelingen',
     community: language === 'en' ? 'Community' : 'Gemeenschap',
   };
 
@@ -96,10 +99,10 @@ const Index = () => {
                 {t.bloom}
               </button>
               <button
-                onClick={() => setCurrentView('benefits')}
+                onClick={() => setCurrentView('mybenefits')}
                 className={cn(
                   "px-3 py-1.5 rounded-full text-sm font-medium transition-all relative",
-                  currentView === 'benefits' 
+                  currentView === 'mybenefits' 
                     ? "bg-card text-foreground shadow-soft" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
@@ -110,6 +113,17 @@ const Index = () => {
                     {tasks.length}
                   </span>
                 )}
+              </button>
+              <button
+                onClick={() => setCurrentView('allbenefits')}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                  currentView === 'allbenefits' 
+                    ? "bg-card text-foreground shadow-soft" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t.allBenefits}
               </button>
               <button
                 onClick={() => setCurrentView('forum')}
@@ -150,12 +164,16 @@ const Index = () => {
           />
         )}
 
-        {currentView === 'benefits' && (
+        {currentView === 'mybenefits' && (
           <MyBenefitsView
             tasks={tasks}
             onToggleStep={handleToggleStep}
             language={language}
           />
+        )}
+
+        {currentView === 'allbenefits' && (
+          <AllBenefitsView language={language} />
         )}
         
         {currentView === 'forum' && (
