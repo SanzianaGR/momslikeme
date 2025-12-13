@@ -214,49 +214,56 @@ export function ChatView({
             </div>
           </div>
         ) : (
-          /* Conversation with living flower */
+          /* Conversation with Bloom following along */
           <div className="max-w-2xl mx-auto">
-            {/* Living Bloom that grows with conversation */}
-            <div className="flex justify-center mb-8">
-              <div className="relative">
-                <BloomFlower 
-                  className="w-24 h-28 md:w-32 md:h-36" 
-                  speaking={isLoading}
-                  growthStage={growthStage}
-                  sparkling={hasRecommendations}
-                />
-              </div>
-            </div>
+            {/* Messages with Bloom appearing next to each assistant message */}
+            <div className="space-y-4">
+              {messages.map((message, index) => {
+                const isLastAssistantMessage = 
+                  message.role === 'assistant' && 
+                  index === messages.filter(m => m.role === 'assistant').length * 2 - 1;
+                
+                return (
+                  <MessageCard
+                    key={message.id}
+                    message={message}
+                    language={language}
+                    index={index}
+                    isLatest={index === messages.length - 1 || isLastAssistantMessage}
+                    isLoading={isLoading}
+                    growthStage={growthStage}
+                    sparkling={hasRecommendations}
+                  />
+                );
+              })}
 
-            {/* Messages as cards */}
-            <div className="space-y-6">
-              {messages.map((message, index) => (
-                <MessageCard
-                  key={message.id}
-                  message={message}
-                  language={language}
-                  index={index}
-                />
-              ))}
-
-              {/* Loading indicator with mini flower */}
+              {/* Loading state - Bloom is typing */}
               {isLoading && (
-                <div className="flex items-center gap-4 py-4">
+                <div className="flex items-end gap-3 animate-fade-in">
                   <BloomFlower 
-                    className="w-10 h-12 shrink-0" 
+                    className="w-14 h-16 md:w-16 md:h-20 shrink-0" 
                     speaking={true}
                     growthStage={growthStage}
                     sparkling={false}
                   />
-                  <span className="text-sm text-muted-foreground italic">
-                    {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
-                  </span>
+                  <div className="bg-card border-2 border-border/50 rounded-2xl rounded-bl-sm p-4 max-w-[80%]">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                      <span className="text-sm text-muted-foreground italic">
+                        {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Quick replies */}
               {quickReplies.length > 0 && !isLoading && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 ml-16 md:ml-20">
                   {quickReplies.map((reply, index) => (
                     <button
                       key={index}
@@ -264,7 +271,7 @@ export function ChatView({
                         onSendMessage(reply);
                         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
                       }}
-                      className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-all"
+                      className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 hover:scale-105 transition-all"
                     >
                       {reply}
                     </button>
@@ -273,24 +280,38 @@ export function ChatView({
               )}
             </div>
 
-            {/* Input area */}
-            <div className="sticky bottom-4 bg-background/80 backdrop-blur-sm rounded-2xl p-3 mt-6">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <ChatInputBox
-                    onSend={(msg) => {
-                      onSendMessage(msg);
-                      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    }}
-                    isLoading={isLoading}
-                    placeholder={language === 'en' ? 'Type your message...' : 'Typ je bericht...'}
+            {/* Input area with mini Bloom */}
+            <div className="sticky bottom-4 mt-6">
+              <div className="flex items-end gap-3">
+                {/* Mini Bloom waiting for input */}
+                <div className="shrink-0 hidden md:block">
+                  <BloomFlower 
+                    className="w-12 h-14" 
+                    speaking={false}
+                    growthStage={growthStage}
+                    sparkling={hasRecommendations}
                   />
                 </div>
-                <SpeechButton
-                  onTranscript={handleSpeechTranscript}
-                  disabled={isLoading}
-                  language={language}
-                />
+                
+                <div className="flex-1 bg-background/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <ChatInputBox
+                        onSend={(msg) => {
+                          onSendMessage(msg);
+                          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                        }}
+                        isLoading={isLoading}
+                        placeholder={language === 'en' ? 'Type your message...' : 'Typ je bericht...'}
+                      />
+                    </div>
+                    <SpeechButton
+                      onTranscript={handleSpeechTranscript}
+                      disabled={isLoading}
+                      language={language}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
