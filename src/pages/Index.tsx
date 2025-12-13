@@ -1,12 +1,70 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { ChatView } from '@/components/chat/ChatView';
+import { BenefitsView } from '@/components/benefits/BenefitsView';
+import { TasksView } from '@/components/tasks/TasksView';
+import { ProfileView } from '@/components/profile/ProfileView';
+import { useChat } from '@/hooks/useChat';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const [currentView, setCurrentView] = useState<'chat' | 'benefits' | 'tasks' | 'profile'>('chat');
+  const { toast } = useToast();
+  
+  const {
+    messages,
+    isLoading,
+    quickReplies,
+    profile,
+    benefitMatches,
+    tasks,
+    sendMessage,
+    addTaskForBenefit,
+    toggleTask,
+    deleteTask,
+  } = useChat();
+
+  const handleAddTask = (benefitId: string) => {
+    addTaskForBenefit(benefitId);
+    toast({
+      title: "Task added! 📝",
+      description: "You can track your progress in the Tasks section.",
+    });
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="flex h-screen w-screen overflow-hidden bg-background">
+      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+      
+      <main className="flex-1 overflow-hidden">
+        {currentView === 'chat' && (
+          <ChatView
+            messages={messages}
+            onSendMessage={sendMessage}
+            isLoading={isLoading}
+            quickReplies={quickReplies}
+          />
+        )}
+        
+        {currentView === 'benefits' && (
+          <BenefitsView
+            matches={benefitMatches}
+            onAddTask={handleAddTask}
+          />
+        )}
+        
+        {currentView === 'tasks' && (
+          <TasksView
+            tasks={tasks}
+            onToggleTask={toggleTask}
+            onDeleteTask={deleteTask}
+          />
+        )}
+        
+        {currentView === 'profile' && (
+          <ProfileView profile={profile} />
+        )}
+      </main>
     </div>
   );
 };
