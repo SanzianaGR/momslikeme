@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils';
 import { ChatMessage } from '@/types';
-import { BloomFlower } from './BloomFlower';
 
 interface MessageCardProps {
   message: ChatMessage;
@@ -15,11 +14,7 @@ interface MessageCardProps {
 export function MessageCard({ 
   message, 
   language, 
-  index, 
-  isLatest = false,
-  isLoading = false,
-  growthStage = 1,
-  sparkling = false
+  index
 }: MessageCardProps) {
   const isUser = message.role === 'user';
   
@@ -27,29 +22,14 @@ export function MessageCard({
     <div 
       className={cn(
         "relative animate-slide-up",
-        isUser ? "flex justify-end" : "flex justify-start items-end gap-3"
+        isUser ? "flex justify-end" : "flex justify-start"
       )}
       style={{ animationDelay: `${index * 0.1}s` }}
     >
-      {/* Bloom appears next to assistant messages */}
-      {!isUser && (
-        <div className="shrink-0 mb-2">
-          <BloomFlower 
-            className={cn(
-              "transition-all duration-500",
-              isLatest ? "w-14 h-16 md:w-16 md:h-20" : "w-10 h-12"
-            )}
-            speaking={isLatest && isLoading}
-            growthStage={growthStage}
-            sparkling={isLatest && sparkling}
-          />
-        </div>
-      )}
-
       {/* Message card */}
       <div 
         className={cn(
-          "relative max-w-[80%]",
+          "relative max-w-[85%]",
           isUser ? "mr-2" : ""
         )}
       >
@@ -67,11 +47,9 @@ export function MessageCard({
         >
           {/* Corner decorations for assistant messages */}
           {!isUser && (
-            <>
-              <svg className="absolute -top-1 -right-1 w-4 h-4 text-accent animate-twinkle" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.5" />
-              </svg>
-            </>
+            <svg className="absolute -top-1 -right-1 w-4 h-4 text-accent animate-twinkle" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.5" />
+            </svg>
           )}
           
           {/* Role indicator */}
