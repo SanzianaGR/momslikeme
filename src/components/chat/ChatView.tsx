@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { HeroSection } from './HeroSection';
 import { ChatBotSection } from './ChatBotSection';
 import { ChatMessage as ChatMessageType } from '@/types';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface ChatViewProps {
   messages: ChatMessageType[];
@@ -14,6 +15,7 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
   const chatSectionRef = useRef<HTMLDivElement>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const { language, toggleLanguage, t } = useLanguage();
 
   const scrollToChat = () => {
     chatSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,7 +49,12 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
           transform: `scale(${1 - scrollProgress * 0.05})`
         }}
       >
-        <HeroSection onScrollToChat={scrollToChat} />
+        <HeroSection 
+          onScrollToChat={scrollToChat}
+          language={language}
+          onToggleLanguage={toggleLanguage}
+          t={t}
+        />
       </div>
       
       {/* Chat section */}
@@ -66,6 +73,7 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
           quickReplies={quickReplies}
           hasStarted={hasStarted}
           onStart={handleStart}
+          t={t}
         />
       </div>
     </div>
