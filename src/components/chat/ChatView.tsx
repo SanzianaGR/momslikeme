@@ -214,38 +214,18 @@ export function ChatView({
             </div>
           </div>
         ) : (
-          /* Conversation with growing flower garden */
+          /* Conversation with living flower */
           <div className="max-w-2xl mx-auto">
-            {/* Growing garden of flowers - one per message */}
-            <div className="flex justify-center items-end gap-1 mb-8 min-h-[120px]">
-              {messages.map((_, index) => (
-                <div 
-                  key={index}
-                  className="animate-grow-up"
-                  style={{ 
-                    animationDelay: `${index * 0.1}s`,
-                    height: `${60 + Math.min(index * 8, 60)}px`
-                  }}
-                >
-                  <BloomFlower 
-                    className="w-10 h-12 md:w-12 md:h-14" 
-                    speaking={isLoading && index === messages.length - 1}
-                    growthStage={Math.min(index, 5)}
-                    sparkling={hasRecommendations && index === messages.length - 1}
-                  />
-                </div>
-              ))}
-              {/* Loading flower */}
-              {isLoading && (
-                <div className="animate-grow-up">
-                  <BloomFlower 
-                    className="w-10 h-12 md:w-12 md:h-14 opacity-50" 
-                    speaking={true}
-                    growthStage={0}
-                    sparkling={false}
-                  />
-                </div>
-              )}
+            {/* Living Bloom that grows with conversation */}
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                <BloomFlower 
+                  className="w-24 h-28 md:w-32 md:h-36" 
+                  speaking={isLoading}
+                  growthStage={growthStage}
+                  sparkling={hasRecommendations}
+                />
+              </div>
             </div>
 
             {/* Messages as cards */}
@@ -259,15 +239,18 @@ export function ChatView({
                 />
               ))}
 
-              {/* Loading indicator */}
+              {/* Loading indicator with mini flower */}
               {isLoading && (
-                <div className="flex items-center gap-3 text-muted-foreground py-4 pl-4">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                  <span className="text-sm italic">{language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}</span>
+                <div className="flex items-center gap-4 py-4">
+                  <BloomFlower 
+                    className="w-10 h-12 shrink-0" 
+                    speaking={true}
+                    growthStage={growthStage}
+                    sparkling={false}
+                  />
+                  <span className="text-sm text-muted-foreground italic">
+                    {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
+                  </span>
                 </div>
               )}
 

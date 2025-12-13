@@ -213,6 +213,55 @@
     animation: talk 0.3s ease-in-out infinite;
   }
   
+  /* Alive flower animations */
+  .animate-flower-idle {
+    animation: flower-idle 4s ease-in-out infinite;
+  }
+  
+  .animate-flower-talk {
+    animation: flower-talk 0.8s ease-in-out infinite;
+  }
+  
+  .animate-stem-sway {
+    animation: stem-sway 5s ease-in-out infinite;
+  }
+  
+  .animate-leaf-flutter {
+    animation: leaf-flutter 3s ease-in-out infinite;
+  }
+  
+  .animate-head-bob {
+    animation: head-bob 3s ease-in-out infinite;
+  }
+  
+  .animate-petals-breathe {
+    animation: petals-breathe 4s ease-in-out infinite;
+  }
+  
+  .animate-cheek-blush {
+    animation: cheek-blush 3s ease-in-out infinite;
+  }
+  
+  .animate-eyes-blink {
+    animation: eyes-blink 4s ease-in-out infinite;
+  }
+  
+  .animate-eyes-excited {
+    animation: eyes-excited 0.5s ease-in-out infinite;
+  }
+  
+  .animate-pupils-look {
+    animation: pupils-look 6s ease-in-out infinite;
+  }
+  
+  .animate-mouth-talk {
+    animation: mouth-talk 0.4s ease-in-out infinite;
+  }
+  
+  .animate-tongue-wiggle {
+    animation: tongue-wiggle 0.3s ease-in-out infinite;
+  }
+  
   .flower-bot.speaking .animate-sway {
     animation: sway-excited 1s ease-in-out infinite;
   }
@@ -303,6 +352,102 @@
 @keyframes talk {
   0%, 100% { d: path("M50 52 Q60 58 70 52"); }
   50% { d: path("M50 52 Q60 64 70 52"); }
+}
+
+/* Alive flower animations */
+@keyframes flower-idle {
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg); 
+  }
+  25% { 
+    transform: translateY(-3px) rotate(1deg); 
+  }
+  50% { 
+    transform: translateY(-5px) rotate(-1deg); 
+  }
+  75% { 
+    transform: translateY(-2px) rotate(0.5deg); 
+  }
+}
+
+@keyframes flower-talk {
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg) scale(1); 
+  }
+  15% { 
+    transform: translateY(-4px) rotate(2deg) scale(1.02); 
+  }
+  30% { 
+    transform: translateY(-2px) rotate(-2deg) scale(1); 
+  }
+  45% { 
+    transform: translateY(-5px) rotate(1deg) scale(1.01); 
+  }
+  60% { 
+    transform: translateY(-3px) rotate(-1deg) scale(1.02); 
+  }
+  75% { 
+    transform: translateY(-4px) rotate(2deg) scale(1); 
+  }
+}
+
+@keyframes stem-sway {
+  0%, 100% { transform: rotate(0deg); }
+  33% { transform: rotate(2deg); }
+  66% { transform: rotate(-2deg); }
+}
+
+@keyframes leaf-flutter {
+  0%, 100% { transform: rotate(-30deg) scale(1); }
+  50% { transform: rotate(-25deg) scale(1.05); }
+}
+
+@keyframes head-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-2px) rotate(2deg); }
+  75% { transform: translateY(-1px) rotate(-2deg); }
+}
+
+@keyframes petals-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes cheek-blush {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+
+@keyframes eyes-blink {
+  0%, 42%, 44%, 100% { transform: scaleY(1); }
+  43% { transform: scaleY(0.1); }
+}
+
+@keyframes eyes-excited {
+  0%, 100% { transform: scaleY(1) translateY(0); }
+  25% { transform: scaleY(1.1) translateY(-1px); }
+  50% { transform: scaleY(0.9) translateY(0); }
+  75% { transform: scaleY(1.05) translateY(-1px); }
+}
+
+@keyframes pupils-look {
+  0%, 40%, 100% { transform: translateX(0); }
+  45%, 55% { transform: translateX(1px); }
+  60%, 70% { transform: translateX(-1px); }
+}
+
+@keyframes mouth-talk {
+  0%, 100% { d: path("M48 58 Q60 68 72 58"); }
+  20% { d: path("M48 58 Q60 72 72 58"); }
+  40% { d: path("M48 58 Q60 65 72 58"); }
+  60% { d: path("M48 58 Q60 74 72 58"); }
+  80% { d: path("M48 58 Q60 66 72 58"); }
+}
+
+@keyframes tongue-wiggle {
+  0%, 100% { transform: translateX(0) scaleX(1); }
+  25% { transform: translateX(1px) scaleX(1.1); }
+  75% { transform: translateX(-1px) scaleX(0.9); }
 }
 
 /* Custom scrollbar */
