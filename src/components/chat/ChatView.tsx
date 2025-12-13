@@ -214,12 +214,36 @@ export function ChatView({
             </div>
           </div>
         ) : (
-          /* Conversation */
-          <div className="max-w-2xl mx-auto space-y-6">
-            {/* Mini Bloom at top */}
-            <div className="flex justify-center mb-4">
+          /* Conversation with Bloom following along */
+          <div className="max-w-3xl mx-auto relative">
+            {/* Bloom follows conversation on the left */}
+            <div 
+              className="hidden md:block fixed left-8 lg:left-16 xl:left-24 transition-all duration-700 ease-out z-40"
+              style={{ 
+                top: `${Math.min(60 + messages.length * 15, 70)}%`,
+                transform: 'translateY(-50%)'
+              }}
+            >
               <BloomFlower 
-                className="w-16 h-16" 
+                className="w-24 h-28 lg:w-28 lg:h-32" 
+                speaking={isLoading}
+                growthStage={growthStage}
+                sparkling={hasRecommendations}
+              />
+              {/* Speech indicator from Bloom */}
+              {isLoading && (
+                <div className="absolute -right-2 top-4 flex gap-1 bg-card px-2 py-1 rounded-full shadow-soft border border-border/50">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Bloom - follows at bottom */}
+            <div className="md:hidden fixed bottom-20 left-4 z-40 transition-all duration-500">
+              <BloomFlower 
+                className="w-16 h-20" 
                 speaking={isLoading}
                 growthStage={growthStage}
                 sparkling={hasRecommendations}
@@ -227,47 +251,44 @@ export function ChatView({
             </div>
 
             {/* Messages as cards */}
-            {messages.map((message, index) => (
-              <MessageCard
-                key={message.id}
-                message={message}
-                language={language}
-                index={index}
-              />
-            ))}
+            <div className="space-y-6 md:ml-8">
+              {messages.map((message, index) => (
+                <MessageCard
+                  key={message.id}
+                  message={message}
+                  language={language}
+                  index={index}
+                />
+              ))}
 
-            {/* Loading indicator */}
-            {isLoading && (
-              <div className="flex items-center justify-center gap-3 text-muted-foreground py-4">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="flex items-center gap-3 text-muted-foreground py-4 pl-4">
+                  <span className="text-sm italic">{language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}</span>
                 </div>
-                <span className="text-sm">{language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}</span>
-              </div>
-            )}
+              )}
 
-            {/* Quick replies */}
-            {quickReplies.length > 0 && !isLoading && (
-              <div className="flex flex-wrap gap-2 justify-center">
-                {quickReplies.map((reply, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      onSendMessage(reply);
-                      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    }}
-                    className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-all"
-                  >
-                    {reply}
-                  </button>
-                ))}
-              </div>
-            )}
+              {/* Quick replies */}
+              {quickReplies.length > 0 && !isLoading && (
+                <div className="flex flex-wrap gap-2 pl-4">
+                  {quickReplies.map((reply, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        onSendMessage(reply);
+                        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                      }}
+                      className="px-4 py-2 rounded-full border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-all"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Input area */}
-            <div className="sticky bottom-4 bg-background/80 backdrop-blur-sm rounded-2xl p-3">
+            <div className="sticky bottom-4 bg-background/80 backdrop-blur-sm rounded-2xl p-3 mt-6 md:ml-8">
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <ChatInputBox
