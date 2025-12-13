@@ -9,7 +9,7 @@ import { SpeechButton } from '@/components/speech/SpeechButton';
 import { BenefitPopup } from './BenefitPopup';
 import { quotes, getRandomQuote } from '@/data/quotes';
 import { CloudDoodle, HeartDoodle, StarDoodle, SunDoodle } from './HandDrawnElements';
-import { Shield, Users, Home, Heart } from 'lucide-react';
+import { Shield, Users, Home, Heart, ArrowUp } from 'lucide-react';
 
 interface ChatViewProps {
   messages: ChatMessageType[];
@@ -35,13 +35,28 @@ export function ChatView({
   const [hasStarted, setHasStarted] = useState(false);
   const [showBenefitPopup, setShowBenefitPopup] = useState(false);
   const [currentBenefitIndex, setCurrentBenefitIndex] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
   
   // Calculate growth stage based on messages (0-5)
   const growthStage = Math.min(Math.floor(messages.length / 2), 5);
   
   // Get a random quote for the hero
   const heroQuote = useMemo(() => getRandomQuote(), []);
+
+  // Show/hide scroll to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Show benefit popup when new matches are found
   useEffect(() => {
@@ -110,6 +125,7 @@ export function ChatView({
 
   return (
     <div className="w-full min-h-screen">
+      <div ref={topRef} />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 py-16 overflow-hidden">
         {/* Background decorations */}
@@ -399,6 +415,17 @@ export function ChatView({
             handleNextBenefit();
           }}
         />
+      )}
+
+      {/* Scroll to top button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform animate-bounce-gentle"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="w-6 h-6" />
+        </button>
       )}
     </div>
   );
