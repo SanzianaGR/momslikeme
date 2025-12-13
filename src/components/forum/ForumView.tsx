@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { ForumThread } from '@/types';
 import { ThreadCard } from './ThreadCard';
 import { NewThreadForm } from './NewThreadForm';
+import { AuthForms } from './AuthForms';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface ForumViewProps {
   language: 'en' | 'nl';
-  isLoggedIn?: boolean;
-  onLoginRequest?: () => void;
 }
 
 // Sample threads for demo
@@ -73,11 +71,12 @@ const categories = [
   { id: 'benefits', labelEn: 'Benefits', labelNl: 'Toeslagen' }
 ];
 
-export function ForumView({ language, isLoggedIn = false, onLoginRequest }: ForumViewProps) {
+export function ForumView({ language }: ForumViewProps) {
   const [threads, setThreads] = useState<ForumThread[]>(sampleThreads);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showNewThread, setShowNewThread] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const filteredThreads = selectedCategory === 'all' 
     ? threads 
@@ -107,10 +106,16 @@ export function ForumView({ language, isLoggedIn = false, onLoginRequest }: Foru
 
   const handlePostClick = () => {
     if (!isLoggedIn) {
-      setShowLoginPrompt(true);
+      setShowAuth(true);
     } else {
       setShowNewThread(true);
     }
+  };
+
+  const handleAuthSuccess = () => {
+    setIsLoggedIn(true);
+    setShowAuth(false);
+    setShowNewThread(true);
   };
 
   const t = {
@@ -119,12 +124,6 @@ export function ForumView({ language, isLoggedIn = false, onLoginRequest }: Foru
       ? 'A community where single moms support each other'
       : 'Een gemeenschap waar alleenstaande moeders elkaar steunen',
     newPost: language === 'en' ? '+ Share your story or question' : '+ Deel je verhaal of vraag',
-    loginTitle: language === 'en' ? 'Join our community' : 'Word lid van onze community',
-    loginText: language === 'en' 
-      ? 'Create an account to share your story and connect with other moms like you.'
-      : 'Maak een account aan om je verhaal te delen en contact te leggen met andere moeders zoals jij.',
-    loginButton: language === 'en' ? 'Create Account' : 'Account Aanmaken',
-    cancel: language === 'en' ? 'Maybe later' : 'Misschien later',
     noThreads: language === 'en' ? 'No threads yet in this category' : 'Nog geen berichten in deze categorie',
   };
 
@@ -190,54 +189,13 @@ export function ForumView({ language, isLoggedIn = false, onLoginRequest }: Foru
           {t.newPost}
         </button>
 
-        {/* Login prompt modal */}
-        {showLoginPrompt && (
-          <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-3xl p-8 max-w-md w-full border-2 border-dashed border-primary/30 animate-scale-in text-center">
-              {/* Decorative flower */}
-              <div className="w-20 h-20 mx-auto mb-4">
-                <svg viewBox="0 0 80 80" className="w-full h-full animate-bounce-gentle">
-                  {[0, 72, 144, 216, 288].map((angle, i) => (
-                    <ellipse
-                      key={i}
-                      cx="40"
-                      cy="15"
-                      rx="12"
-                      ry="18"
-                      className="fill-primary/60"
-                      transform={`rotate(${angle} 40 40)`}
-                    />
-                  ))}
-                  <circle cx="40" cy="40" r="14" className="fill-warning" />
-                  <circle cx="36" cy="38" r="2" className="fill-foreground" />
-                  <circle cx="44" cy="38" r="2" className="fill-foreground" />
-                  <path d="M35 44 Q40 48 45 44" className="stroke-foreground fill-none" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-              
-              <h2 className="text-xl font-bold mb-2">{t.loginTitle}</h2>
-              <p className="text-muted-foreground mb-6">{t.loginText}</p>
-              
-              <div className="flex flex-col gap-3">
-                <Button 
-                  className="w-full"
-                  onClick={() => {
-                    setShowLoginPrompt(false);
-                    onLoginRequest?.();
-                  }}
-                >
-                  {t.loginButton}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full"
-                  onClick={() => setShowLoginPrompt(false)}
-                >
-                  {t.cancel}
-                </Button>
-              </div>
-            </div>
-          </div>
+        {/* Auth modal */}
+        {showAuth && (
+          <AuthForms
+            language={language}
+            onSuccess={handleAuthSuccess}
+            onCancel={() => setShowAuth(false)}
+          />
         )}
 
         {/* New thread form */}
