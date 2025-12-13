@@ -126,24 +126,13 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
               <circle cx="70.5" cy="45" r="1.5" className="fill-card" />
             </g>
             
-            {/* Mouth - animated */}
+            {/* Mouth - happy smile */}
             <path 
-              d={speaking 
-                ? "M48 58 Q60 72 72 58" 
-                : "M48 58 Q60 68 72 58"
-              }
-              className={cn(
-                "stroke-foreground fill-none",
-                speaking && "animate-mouth-talk"
-              )}
+              d="M48 58 Q60 68 72 58"
+              className="stroke-foreground fill-none"
               strokeWidth="3"
               strokeLinecap="round"
             />
-            
-            {/* Little tongue when speaking */}
-            {speaking && (
-              <ellipse cx="60" cy="64" rx="4" ry="3" className="fill-[hsl(350,60%,75%)] animate-tongue-wiggle" />
-            )}
           </g>
         </g>
       </svg>

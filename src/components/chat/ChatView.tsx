@@ -224,34 +224,32 @@ export function ChatView({
                 
                 return (
                   <div key={message.id} className="animate-fade-in">
-                    {isAssistant ? (
-                      /* Assistant message with Bloom alongside */
+                    {isAssistant && isLatestAssistant ? (
+                      /* Latest assistant message with Bloom alongside */
                       <div className="flex gap-4 items-start">
-                        {/* Large Bloom next to assistant messages */}
+                        {/* Large Bloom next to latest message */}
                         <div className="hidden md:flex flex-col items-center flex-shrink-0">
                           <BloomFlower 
-                            className={`transition-all duration-500 ${isLatestAssistant ? 'w-32 h-40 lg:w-40 lg:h-48' : 'w-20 h-24 opacity-60'}`}
-                            speaking={isLoading && isLatestAssistant}
+                            className="w-32 h-40 lg:w-40 lg:h-48"
+                            speaking={isLoading}
                             growthStage={growthStage}
-                            sparkling={hasRecommendations && isLatestAssistant}
+                            sparkling={hasRecommendations}
                           />
-                          {isLatestAssistant && (
-                            <p className="text-xs text-muted-foreground mt-1 text-center max-w-[120px]">
-                              {isLoading 
-                                ? (language === 'en' ? "Thinking..." : "Denkt na...")
-                                : (language === 'en' ? "I'm here!" : "Ik ben er!")
-                              }
-                            </p>
-                          )}
+                          <p className="text-xs text-muted-foreground mt-1 text-center max-w-[120px]">
+                            {isLoading 
+                              ? (language === 'en' ? "Thinking..." : "Denkt na...")
+                              : (language === 'en' ? "I'm here!" : "Ik ben er!")
+                            }
+                          </p>
                         </div>
                         
-                        {/* Mobile: smaller Bloom inline */}
+                        {/* Mobile: Bloom inline */}
                         <div className="flex md:hidden flex-shrink-0">
                           <BloomFlower 
-                            className={`transition-all duration-500 ${isLatestAssistant ? 'w-16 h-20' : 'w-10 h-12 opacity-60'}`}
-                            speaking={isLoading && isLatestAssistant}
+                            className="w-16 h-20"
+                            speaking={isLoading}
                             growthStage={growthStage}
-                            sparkling={hasRecommendations && isLatestAssistant}
+                            sparkling={hasRecommendations}
                           />
                         </div>
                         
@@ -260,15 +258,28 @@ export function ChatView({
                             message={message}
                             language={language}
                             index={index}
-                            isLatest={isLatestAssistant || false}
+                            isLatest={true}
                             isLoading={isLoading}
                             growthStage={growthStage}
                             sparkling={hasRecommendations}
                           />
                         </div>
                       </div>
+                    ) : isAssistant ? (
+                      /* Past assistant messages - no Bloom */
+                      <div className="md:pl-44">
+                        <MessageCard
+                          message={message}
+                          language={language}
+                          index={index}
+                          isLatest={false}
+                          isLoading={false}
+                          growthStage={growthStage}
+                          sparkling={false}
+                        />
+                      </div>
                     ) : (
-                      /* User message - right aligned, no Bloom */
+                      /* User message - right aligned */
                       <div className="flex justify-end md:pl-44">
                         <MessageCard
                           message={message}
