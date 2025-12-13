@@ -177,11 +177,7 @@ const Index = () => {
         )}
         
         {currentView === 'forum' && (
-          <ForumView 
-            language={language} 
-            isLoggedIn={isLoggedIn}
-            onLoginRequest={handleLoginRequest}
-          />
+          <ForumView language={language} />
         )}
       </main>
     </div>
