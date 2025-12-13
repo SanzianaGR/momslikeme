@@ -1,9 +1,22 @@
 import { useState, useMemo } from 'react';
 import { allBenefits, municipalities, BenefitFull } from '@/data/allBenefits';
-import { ExternalLink, FileText, CheckCircle, Info, Search, Filter, ChevronDown, ChevronUp, MapPin, Building2, Heart } from 'lucide-react';
+import { ExternalLink, FileText, CheckCircle, Info, Search, ChevronDown, ChevronUp, MapPin, Building2, Heart, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FloatingDoodles } from '@/components/mybenefits/FloatingDoodles';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface AllBenefitsViewProps {
   language: 'en' | 'nl';
@@ -14,6 +27,7 @@ export function AllBenefitsView({ language }: AllBenefitsViewProps) {
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'national' | 'municipal' | 'private'>('all');
   const [municipalityFilter, setMunicipalityFilter] = useState<string>('all');
   const [expandedBenefit, setExpandedBenefit] = useState<string | null>(null);
+  const [municipalityOpen, setMunicipalityOpen] = useState(false);
 
   const t = {
     title: language === 'nl' ? 'Alle Regelingen' : 'All Benefits',
@@ -37,25 +51,39 @@ export function AllBenefitsView({ language }: AllBenefitsViewProps) {
     forYou: language === 'nl' ? 'Speciaal voor alleenstaande ouders' : 'Especially for single parents',
   };
 
+  // Get municipalities that have specific schemes
+  const municipalitiesWithSchemes = useMemo(() => {
+    return [...new Set(allBenefits.filter(b => b.municipality).map(b => b.municipality!))];
+  }, []);
+
   const filteredBenefits = useMemo(() => {
     return allBenefits.filter(benefit => {
       // Category filter
       if (categoryFilter !== 'all' && benefit.category !== categoryFilter) return false;
       
-      // Municipality filter
-      if (municipalityFilter !== 'all' && benefit.municipality !== municipalityFilter) return false;
+      // Municipality filter - show national + private for all, municipal only for matching
+      if (municipalityFilter !== 'all') {
+        // Always show national and private benefits
+        if (benefit.category === 'municipal' && benefit.municipality !== municipalityFilter) {
+          return false;
+        }
+      }
       
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const name = language === 'nl' ? (benefit.nameNl || benefit.name) : benefit.name;
         const desc = language === 'nl' ? (benefit.shortDescriptionNl || benefit.shortDescription) : benefit.shortDescription;
-        return name.toLowerCase().includes(query) || desc.toLowerCase().includes(query);
+        const municipality = benefit.municipality?.toLowerCase() || '';
+        return name.toLowerCase().includes(query) || desc.toLowerCase().includes(query) || municipality.includes(query);
       }
       
       return true;
     });
   }, [searchQuery, categoryFilter, municipalityFilter, language]);
+
+  // Check if selected municipality has specific schemes
+  const selectedMunicipalityHasSchemes = municipalitiesWithSchemes.includes(municipalityFilter);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -254,38 +282,76 @@ export function AllBenefitsView({ language }: AllBenefitsViewProps) {
           ))}
         </div>
 
-        {/* Municipality filter (only show when municipal is selected) */}
-        {categoryFilter === 'municipal' && (
-          <div className="flex flex-wrap gap-2 mb-4 animate-fade-in">
-            <span className="flex items-center gap-1 text-sm text-muted-foreground mr-2">
-              <Filter className="w-4 h-4" />
-              {t.municipality}:
-            </span>
+        {/* Municipality filter - searchable dropdown */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <span className="flex items-center gap-1 text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4" />
+            {t.municipality}:
+          </span>
+          
+          <Popover open={municipalityOpen} onOpenChange={setMunicipalityOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={municipalityOpen}
+                className="w-[220px] justify-between border-2 border-dashed bg-card"
+              >
+                {municipalityFilter === 'all' 
+                  ? (language === 'nl' ? 'Alle gemeentes' : 'All municipalities')
+                  : municipalityFilter}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[220px] p-0 bg-card border-2 shadow-lg z-50" align="start">
+              <Command className="bg-card">
+                <CommandInput 
+                  placeholder={language === 'nl' ? 'Zoek gemeente...' : 'Search municipality...'} 
+                  className="h-9"
+                />
+                <CommandList className="max-h-[300px]">
+                  <CommandEmpty>{language === 'nl' ? 'Geen gemeente gevonden' : 'No municipality found'}</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setMunicipalityFilter('all');
+                        setMunicipalityOpen(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {language === 'nl' ? 'Alle gemeentes' : 'All municipalities'}
+                    </CommandItem>
+                    {municipalities.map((muni) => (
+                      <CommandItem
+                        key={muni}
+                        value={muni}
+                        onSelect={() => {
+                          setMunicipalityFilter(muni);
+                          setMunicipalityOpen(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {muni}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {/* Clear filter button */}
+          {municipalityFilter !== 'all' && (
             <button
               onClick={() => setMunicipalityFilter('all')}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                municipalityFilter === 'all'
-                  ? 'bg-secondary text-secondary-foreground border-secondary'
-                  : 'bg-card text-muted-foreground border-border hover:border-secondary/30'
-              }`}
+              className="flex items-center gap-1 px-2 py-1 rounded-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
             >
-              {t.all}
+              <X className="w-3 h-3" />
+              {language === 'nl' ? 'Wissen' : 'Clear'}
             </button>
-            {municipalities.map((muni) => (
-              <button
-                key={muni}
-                onClick={() => setMunicipalityFilter(muni)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                  municipalityFilter === muni
-                    ? 'bg-secondary text-secondary-foreground border-secondary'
-                    : 'bg-card text-muted-foreground border-border hover:border-secondary/30'
-                }`}
-              >
-                {muni}
-              </button>
-            ))}
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Results count */}
         <p className="text-sm text-muted-foreground">
@@ -295,6 +361,18 @@ export function AllBenefitsView({ language }: AllBenefitsViewProps) {
 
       {/* Benefits list */}
       <div className="relative z-10 px-6 pb-24 max-w-3xl mx-auto">
+        {/* Municipality notice */}
+        {municipalityFilter !== 'all' && !selectedMunicipalityHasSchemes && (
+          <div className="mb-6 p-4 rounded-xl bg-secondary/10 border-2 border-dashed border-secondary/30 animate-fade-in">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-secondary">{municipalityFilter}</span>
+              {language === 'nl' 
+                ? ' — We hebben nog geen specifieke gemeentelijke regelingen voor deze gemeente. De landelijke regelingen en fondsen hieronder zijn wel beschikbaar. Neem contact op met je gemeente voor lokale regelingen.'
+                : ' — We don\'t have specific municipal schemes for this municipality yet. The national benefits and private funds below are still available. Contact your municipality for local schemes.'}
+            </p>
+          </div>
+        )}
+
         {filteredBenefits.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">{t.noResults}</p>
