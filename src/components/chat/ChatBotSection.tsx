@@ -14,31 +14,8 @@ interface ChatBotSectionProps {
   quickReplies?: string[];
   hasStarted: boolean;
   onStart: (message: string) => void;
+  t: (key: string) => string;
 }
-
-const startingOptions = [
-  {
-    icon: Users,
-    label: "Ik ben alleenstaande ouder",
-    description: "Vind ondersteuning voor jou en je kinderen",
-    message: "Ik ben alleenstaande ouder en zoek naar regelingen waar ik misschien recht op heb.",
-    color: "primary",
-  },
-  {
-    icon: Home,
-    label: "Hulp met wonen",
-    description: "Huur, energie, verhuiskosten",
-    message: "Ik heb hulp nodig met woonkosten zoals huur of energierekeningen.",
-    color: "secondary",
-  },
-  {
-    icon: Heart,
-    label: "Voor mijn kinderen",
-    description: "School, sport, verjaardagen",
-    message: "Ik wil ondersteuning vinden voor de activiteiten en behoeften van mijn kinderen.",
-    color: "accent",
-  },
-];
 
 export function ChatBotSection({ 
   messages, 
@@ -46,9 +23,34 @@ export function ChatBotSection({
   isLoading, 
   quickReplies = [],
   hasStarted,
-  onStart 
+  onStart,
+  t
 }: ChatBotSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const startingOptions = [
+    {
+      icon: Users,
+      labelKey: 'option.parent.label',
+      descKey: 'option.parent.desc',
+      messageKey: 'option.parent.message',
+      color: "primary",
+    },
+    {
+      icon: Home,
+      labelKey: 'option.housing.label',
+      descKey: 'option.housing.desc',
+      messageKey: 'option.housing.message',
+      color: "secondary",
+    },
+    {
+      icon: Heart,
+      labelKey: 'option.children.label',
+      descKey: 'option.children.desc',
+      messageKey: 'option.children.message',
+      color: "accent",
+    },
+  ];
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -66,6 +68,8 @@ export function ChatBotSection({
       {/* Floating decorations */}
       <StarDoodle className="absolute top-20 right-8 w-10 h-10 animate-twinkle opacity-50" />
       <HeartDoodle className="absolute bottom-32 left-8 w-8 h-8 animate-float opacity-40" />
+      <StarDoodle className="absolute top-1/2 left-4 w-6 h-6 animate-twinkle opacity-30" style={{ animationDelay: '1.5s' }} />
+      <HeartDoodle className="absolute top-1/3 right-4 w-7 h-7 animate-float opacity-35" style={{ animationDelay: '2s' }} />
       
       <div className="max-w-2xl mx-auto">
         {/* Chat container with hand-drawn border effect */}
@@ -82,8 +86,8 @@ export function ChatBotSection({
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-card animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">Bloem</h2>
-                  <p className="text-sm text-muted-foreground">Je vriendelijke hulpje 🌸</p>
+                  <h2 className="text-xl font-bold text-foreground">{t('chat.name')}</h2>
+                  <p className="text-sm text-muted-foreground">{t('chat.helper')}</p>
                 </div>
               </div>
             </div>
@@ -97,9 +101,9 @@ export function ChatBotSection({
                   <div className="bg-success/10 border border-success/20 rounded-2xl p-4 mb-6 flex items-start gap-3 hand-drawn-card">
                     <Shield className="h-6 w-6 text-success shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-foreground text-sm">Jouw privacy is veilig</p>
+                      <p className="font-semibold text-foreground text-sm">{t('chat.privacy.title')}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Ik ben niet verbonden met de overheid. Wat je deelt blijft tussen ons. 💚
+                        {t('chat.privacy.desc')}
                       </p>
                     </div>
                   </div>
@@ -107,7 +111,7 @@ export function ChatBotSection({
                   {/* Greeting from flower */}
                   <div className="text-center mb-6">
                     <p className="text-lg text-foreground font-medium hand-drawn-text">
-                      Hallo! 👋 Hoe kan ik je helpen vandaag?
+                      {t('chat.greeting')}
                     </p>
                   </div>
                   
@@ -116,7 +120,7 @@ export function ChatBotSection({
                     {startingOptions.map((option, index) => (
                       <button
                         key={index}
-                        onClick={() => onStart(option.message)}
+                        onClick={() => onStart(t(option.messageKey))}
                         className="w-full bg-background border-2 border-border hover:border-primary/40 rounded-2xl p-4 text-left transition-all group hover-lift hand-drawn-card animate-slide-up"
                         style={{ animationDelay: `${index * 100}ms` }}
                       >
@@ -133,8 +137,8 @@ export function ChatBotSection({
                             }`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-bold text-foreground">{option.label}</p>
-                            <p className="text-sm text-muted-foreground">{option.description}</p>
+                            <p className="font-bold text-foreground">{t(option.labelKey)}</p>
+                            <p className="text-sm text-muted-foreground">{t(option.descKey)}</p>
                           </div>
                           <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                         </div>
@@ -180,7 +184,7 @@ export function ChatBotSection({
                 <ChatInput
                   onSend={hasStarted ? onSendMessage : onStart}
                   isLoading={isLoading}
-                  placeholder={hasStarted ? "Typ je bericht..." : "Of typ hier je vraag..."}
+                  placeholder={hasStarted ? t('chat.input.placeholder') : t('chat.input.welcome')}
                 />
               </div>
             </div>
