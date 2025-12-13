@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CloudDoodle, HeartDoodle, StarDoodle } from '@/components/chat/HandDrawnElements';
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, Heart } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, Heart, X } from 'lucide-react';
 
 interface AuthFormsProps {
   language: 'en' | 'nl';
@@ -22,31 +21,29 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const t = {
-    signupTitle: language === 'en' ? 'Join our community!' : 'Word lid van onze community!',
-    signupSubtitle: language === 'en' ? 'Create an account to share your story and connect with other moms.' : 'Maak een account om je verhaal te delen en contact te leggen met andere moeders.',
+    signupTitle: language === 'en' ? 'Join our community!' : 'Word lid!',
+    signupSubtitle: language === 'en' ? 'Create an account to share and connect.' : 'Maak een account om te delen.',
     loginTitle: language === 'en' ? 'Welcome back!' : 'Welkom terug!',
-    loginSubtitle: language === 'en' ? 'Sign in to continue sharing.' : 'Log in om verder te gaan met delen.',
-    name: language === 'en' ? 'Display name' : 'Weergavenaam',
+    loginSubtitle: language === 'en' ? 'Sign in to continue.' : 'Log in om verder te gaan.',
+    name: language === 'en' ? 'Display name' : 'Naam',
     namePlaceholder: language === 'en' ? 'How should we call you?' : 'Hoe mogen we je noemen?',
     email: 'Email',
     emailPlaceholder: language === 'en' ? 'your.email@example.com' : 'jouw.email@voorbeeld.nl',
     password: language === 'en' ? 'Password' : 'Wachtwoord',
     passwordPlaceholder: language === 'en' ? 'Create a secure password' : 'Maak een veilig wachtwoord',
     loginPasswordPlaceholder: language === 'en' ? 'Your password' : 'Je wachtwoord',
-    terms: language === 'en' ? 'I agree to the Terms & Privacy Policy' : 'Ik ga akkoord met de Voorwaarden & Privacy',
-    signupButton: language === 'en' ? 'Create my account' : 'Maak mijn account',
+    terms: language === 'en' ? 'I agree to the Terms & Privacy' : 'Ik ga akkoord met Voorwaarden',
+    signupButton: language === 'en' ? 'Create account' : 'Account maken',
     loginButton: language === 'en' ? 'Sign In' : 'Inloggen',
     or: language === 'en' ? 'or' : 'of',
-    google: language === 'en' ? 'Continue with Google' : 'Doorgaan met Google',
-    hasAccount: language === 'en' ? 'Already have an account?' : 'Heb je al een account?',
-    noAccount: language === 'en' ? "Don't have an account?" : 'Nog geen account?',
+    google: language === 'en' ? 'Continue with Google' : 'Met Google',
+    hasAccount: language === 'en' ? 'Have an account?' : 'Al een account?',
+    noAccount: language === 'en' ? 'No account?' : 'Nog geen account?',
     switchToLogin: language === 'en' ? 'Sign in' : 'Inloggen',
-    switchToSignup: language === 'en' ? 'Sign up free' : 'Gratis aanmelden',
-    cancel: language === 'en' ? '← Back to browsing' : '← Terug naar bladeren',
+    switchToSignup: language === 'en' ? 'Sign up' : 'Aanmelden',
     weak: language === 'en' ? 'Weak' : 'Zwak',
     good: language === 'en' ? 'Good' : 'Goed',
     strong: language === 'en' ? 'Strong' : 'Sterk',
-    strength: language === 'en' ? 'Password strength' : 'Wachtwoordsterkte',
   };
 
   const getPasswordStrength = () => {
@@ -68,71 +65,59 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 relative overflow-hidden">
-      {/* Background decorations */}
-      <CloudDoodle className="absolute top-16 left-8 w-20 h-14 text-secondary/20 animate-float" />
-      <StarDoodle className="absolute top-24 right-16 w-8 h-8 text-accent/30 animate-twinkle" />
-      <HeartDoodle className="absolute bottom-32 left-16 w-10 h-10 text-primary/20 animate-pulse-slow" />
-      <CloudDoodle className="absolute bottom-20 right-12 w-16 h-12 text-primary/15 animate-float" style={{ animationDelay: '2s' }} />
-      <StarDoodle className="absolute top-1/2 left-1/4 w-6 h-6 text-secondary/20 animate-twinkle" style={{ animationDelay: '1s' }} />
-
-      {/* Gradient blobs */}
-      <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-secondary/5 rounded-full blur-3xl" />
-
-      <div className="max-w-md mx-auto relative z-10">
-        {/* Back button */}
+    <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-card rounded-3xl shadow-2xl border-2 border-primary/20 w-full max-w-sm relative animate-scale-in my-auto">
+        {/* Top gradient bar */}
+        <div className="h-1.5 bg-gradient-to-r from-primary via-secondary to-accent rounded-t-3xl" />
+        
+        {/* Close button */}
         <button
           onClick={onCancel}
-          className="mb-8 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors z-10"
         >
-          {t.cancel}
+          <X className="w-4 h-4" />
         </button>
 
-        {/* Card */}
-        <div className="bg-card rounded-3xl border-2 border-dashed border-primary/30 p-8 shadow-lg animate-scale-in">
-          {/* Top decoration */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center animate-bounce-gentle">
-                <svg viewBox="0 0 80 80" className="w-full h-full">
-                  {[0, 72, 144, 216, 288].map((angle, i) => (
-                    <ellipse
-                      key={i}
-                      cx="40"
-                      cy="15"
-                      rx="12"
-                      ry="18"
-                      className="fill-primary/60"
-                      transform={`rotate(${angle} 40 40)`}
-                    />
-                  ))}
-                  <circle cx="40" cy="40" r="14" className="fill-accent" />
-                  <circle cx="36" cy="38" r="2.5" className="fill-foreground" />
-                  <circle cx="44" cy="38" r="2.5" className="fill-foreground" />
-                  <path d="M35 45 Q40 50 45 45" className="stroke-foreground fill-none" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-              <HeartDoodle className="absolute -right-3 -top-1 w-6 h-6 text-accent animate-pulse-slow" />
+        <div className="p-6">
+          {/* Flower decoration */}
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 animate-bounce-gentle">
+              <svg viewBox="0 0 80 80" className="w-full h-full">
+                {[0, 72, 144, 216, 288].map((angle, i) => (
+                  <ellipse
+                    key={i}
+                    cx="40"
+                    cy="18"
+                    rx="10"
+                    ry="15"
+                    className="fill-primary/70"
+                    transform={`rotate(${angle} 40 40)`}
+                  />
+                ))}
+                <circle cx="40" cy="40" r="12" className="fill-accent" />
+                <circle cx="36" cy="38" r="2" className="fill-foreground" />
+                <circle cx="44" cy="38" r="2" className="fill-foreground" />
+                <path d="M36 44 Q40 48 44 44" className="stroke-foreground fill-none" strokeWidth="2" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
 
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+          <div className="text-center mb-5">
+            <h2 className="text-xl font-bold text-foreground mb-1">
               {mode === 'signup' ? t.signupTitle : t.loginTitle}
-            </h1>
+            </h2>
             <p className="text-muted-foreground text-sm">
               {mode === 'signup' ? t.signupSubtitle : t.loginSubtitle}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground font-medium flex items-center gap-2">
-                  <User className="w-4 h-4 text-primary" />
+              <div className="space-y-1">
+                <Label htmlFor="name" className="text-foreground text-sm font-medium flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-primary" />
                   {t.name}
                 </Label>
                 <Input
@@ -141,15 +126,15 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
                   placeholder={t.namePlaceholder}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-12 rounded-2xl border-2 border-border focus:border-primary bg-background"
+                  className="h-10 rounded-xl border-2 border-border focus:border-primary bg-background text-sm"
                   required
                 />
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="auth-email" className="text-foreground font-medium flex items-center gap-2">
-                <Mail className="w-4 h-4 text-primary" />
+            <div className="space-y-1">
+              <Label htmlFor="auth-email" className="text-foreground text-sm font-medium flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-primary" />
                 {t.email}
               </Label>
               <Input
@@ -158,14 +143,14 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
                 placeholder={t.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 rounded-2xl border-2 border-border focus:border-primary bg-background"
+                className="h-10 rounded-xl border-2 border-border focus:border-primary bg-background text-sm"
                 required
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="auth-password" className="text-foreground font-medium flex items-center gap-2">
-                <Lock className="w-4 h-4 text-primary" />
+            <div className="space-y-1">
+              <Label htmlFor="auth-password" className="text-foreground text-sm font-medium flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-primary" />
                 {t.password}
               </Label>
               <div className="relative">
@@ -175,37 +160,33 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
                   placeholder={mode === 'signup' ? t.passwordPlaceholder : t.loginPasswordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-2xl border-2 border-border focus:border-primary bg-background pr-12"
+                  className="h-10 rounded-xl border-2 border-border focus:border-primary bg-background pr-10 text-sm"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {/* Password strength */}
               {mode === 'signup' && password.length > 0 && (
-                <div className="space-y-1 pt-1">
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full ${strength.color} transition-all duration-300`} style={{ width: strength.width }} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{t.strength}: <span className="font-medium">{strength.label}</span></p>
+                <div className="h-1 bg-muted rounded-full overflow-hidden mt-1.5">
+                  <div className={`h-full ${strength.color} transition-all duration-300`} style={{ width: strength.width }} />
                 </div>
               )}
             </div>
 
             {mode === 'signup' && (
-              <div className="flex items-start gap-3 pt-1">
+              <div className="flex items-center gap-2 pt-1">
                 <Checkbox
                   id="terms"
                   checked={agreeTerms}
                   onCheckedChange={(checked) => setAgreeTerms(checked === true)}
-                  className="mt-0.5 border-2 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-md"
+                  className="border-2 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded"
                 />
-                <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                <Label htmlFor="terms" className="text-xs text-muted-foreground cursor-pointer">
                   {t.terms}
                 </Label>
               </div>
@@ -214,16 +195,15 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
             <Button
               type="submit"
               disabled={isLoading || (mode === 'signup' && !agreeTerms)}
-              className="w-full h-12 rounded-2xl text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
+              className="w-full h-10 rounded-xl font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 mt-2"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
-                  <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  {mode === 'signup' ? 'Creating...' : 'Signing in...'}
+                  <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                 </span>
               ) : mode === 'signup' ? (
                 <span className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-4 h-4" />
                   {t.signupButton}
                 </span>
               ) : (
@@ -233,9 +213,9 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
           </form>
 
           {/* Divider */}
-          <div className="my-6 flex items-center gap-4">
+          <div className="my-4 flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-muted-foreground text-sm">{t.or}</span>
+            <span className="text-muted-foreground text-xs">{t.or}</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
@@ -243,9 +223,9 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
           <Button
             type="button"
             variant="outline"
-            className="w-full h-12 rounded-2xl border-2 border-border hover:bg-muted/50 font-medium"
+            className="w-full h-10 rounded-xl border-2 border-border hover:bg-muted/50 text-sm font-medium"
           >
-            <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -255,7 +235,7 @@ export function AuthForms({ language, onSuccess, onCancel }: AuthFormsProps) {
           </Button>
 
           {/* Switch mode */}
-          <p className="text-center mt-8 text-muted-foreground">
+          <p className="text-center mt-4 text-muted-foreground text-sm">
             {mode === 'signup' ? t.hasAccount : t.noAccount}{' '}
             <button
               type="button"
