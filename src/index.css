@@ -143,6 +143,26 @@
     background-image: var(--gradient-accent);
   }
 
+  /* Hand-drawn aesthetic */
+  .hand-drawn-card {
+    position: relative;
+  }
+  
+  .hand-drawn-text {
+    font-variation-settings: 'wght' 500;
+    letter-spacing: 0.01em;
+  }
+  
+  .hand-drawn-badge {
+    transform: rotate(-1deg);
+    transition: transform 0.3s ease;
+  }
+  
+  .hand-drawn-badge:hover {
+    transform: rotate(0deg) scale(1.02);
+  }
+
+  /* Animations */
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
@@ -152,15 +172,44 @@
   }
 
   .animate-fade-in {
-    animation: fade-in 0.5s ease-out;
+    animation: fade-in 0.5s ease-out forwards;
   }
 
   .animate-slide-up {
-    animation: slide-up 0.4s ease-out;
+    animation: slide-up 0.4s ease-out forwards;
   }
 
   .animate-scale-in {
     animation: scale-in 0.3s ease-out;
+  }
+  
+  .animate-twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  
+  .animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+  }
+  
+  .animate-sway {
+    animation: sway 4s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+  
+  .animate-blink {
+    animation: blink 4s ease-in-out infinite;
+  }
+  
+  .animate-talk {
+    animation: talk 0.3s ease-in-out infinite;
+  }
+  
+  .flower-bot.speaking .animate-sway {
+    animation: sway-excited 1s ease-in-out infinite;
   }
 }
 
@@ -199,6 +248,41 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+@keyframes sway-excited {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes blink {
+  0%, 45%, 55%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.1); }
+}
+
+@keyframes talk {
+  0%, 100% { d: path("M50 52 Q60 58 70 52"); }
+  50% { d: path("M50 52 Q60 64 70 52"); }
 }
 
 /* Custom scrollbar */
