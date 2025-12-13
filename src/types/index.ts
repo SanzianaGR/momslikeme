@@ -29,16 +29,16 @@ export interface Benefit {
   name: string;
   nameNl: string;
   description: string;
-  descriptionNl: string;
+  descriptionNl?: string;
   category: 'national' | 'municipal' | 'private';
   administrator: string;
   eligibilityCriteria: string[];
-  eligibilityCriteriaNl: string[];
+  eligibilityCriteriaNl?: string[];
   applicationUrl?: string;
   estimatedAmount?: string;
   estimatedAmountNl?: string;
   deadline?: string;
-  documents: DocumentRequirement[];
+  documents?: DocumentRequirement[];
   icon: string;
 }
 
@@ -46,9 +46,9 @@ export interface BenefitMatch {
   benefit: Benefit;
   matchScore: number;
   matchReasons: string[];
-  matchReasonsNl: string[];
+  matchReasonsNl?: string[];
   missingInfo: string[];
-  missingInfoNl: string[];
+  missingInfoNl?: string[];
 }
 
 export interface TaskStep {
@@ -63,7 +63,7 @@ export interface TaskStep {
 export interface Task {
   id: string;
   title: string;
-  titleNl: string;
+  titleNl?: string;
   description?: string;
   descriptionNl?: string;
   benefitId?: string;
@@ -72,8 +72,8 @@ export interface Task {
   dueDate?: string;
   priority: 'low' | 'medium' | 'high';
   createdAt: string;
-  steps: TaskStep[];
-  documents: DocumentRequirement[];
+  steps?: TaskStep[];
+  documents?: DocumentRequirement[];
   estimatedAmount?: string;
   applicationUrl?: string;
 }

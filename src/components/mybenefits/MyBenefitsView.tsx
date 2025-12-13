@@ -39,10 +39,10 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
   const handleDownloadPDF = () => {
     // Create printable content
     const printContent = tasks.map(task => {
-      const name = language === 'nl' ? task.titleNl : task.title;
-      const desc = language === 'nl' ? task.descriptionNl : task.description;
-      const steps = task.steps.map(s => `${s.completed ? '✓' : '○'} ${language === 'nl' ? s.titleNl : s.title}`).join('\n');
-      const docs = task.documents.map(d => `- ${language === 'nl' ? d.nameNl : d.name}`).join('\n');
+      const name = language === 'nl' ? (task.titleNl || task.title) : task.title;
+      const desc = language === 'nl' ? (task.descriptionNl || task.description) : task.description;
+      const steps = (task.steps || []).map(s => `${s.completed ? '✓' : '○'} ${language === 'nl' ? s.titleNl : s.title}`).join('\n');
+      const docs = (task.documents || []).map(d => `- ${language === 'nl' ? d.nameNl : d.name}`).join('\n');
       
       return `
 ═══════════════════════════════════════
@@ -74,7 +74,7 @@ ${docs}
   const handleSendEmail = () => {
     const subject = encodeURIComponent(`momslikeme - ${t.title}`);
     const body = encodeURIComponent(`${t.youDeserve}\n\n${tasks.map(task => {
-      const name = language === 'nl' ? task.titleNl : task.title;
+      const name = language === 'nl' ? (task.titleNl || task.title) : task.title;
       return `• ${name} - ${task.estimatedAmount || ''}`;
     }).join('\n')}`);
     window.open(`mailto:?subject=${subject}&body=${body}`);
@@ -145,10 +145,12 @@ ${docs}
 
             {tasks.map((task, index) => {
               const isExpanded = expandedTask === task.id;
-              const completedSteps = task.steps.filter(s => s.completed).length;
-              const totalSteps = task.steps.length;
-              const name = language === 'nl' ? task.titleNl : task.title;
-              const description = language === 'nl' ? task.descriptionNl : task.description;
+              const steps = task.steps || [];
+              const documents = task.documents || [];
+              const completedSteps = steps.filter(s => s.completed).length;
+              const totalSteps = steps.length;
+              const name = language === 'nl' ? (task.titleNl || task.title) : task.title;
+              const description = language === 'nl' ? (task.descriptionNl || task.description) : task.description;
 
               return (
                 <div 
@@ -202,7 +204,7 @@ ${docs}
                           {t.requirements}
                         </h4>
                         <div className="space-y-2">
-                          {task.steps.map(step => (
+                          {steps.map(step => (
                             <HandDrawnCheckbox
                               key={step.id}
                               checked={step.completed}
@@ -214,14 +216,14 @@ ${docs}
                       </div>
 
                       {/* Documents */}
-                      {task.documents.length > 0 && (
+                      {documents.length > 0 && (
                         <div>
                           <h4 className="font-semibold text-sm text-muted-foreground mb-3 flex items-center gap-2">
                             <FileText className="h-4 w-4" />
                             {t.documents}
                           </h4>
                           <div className="space-y-2">
-                            {task.documents.map(doc => (
+                            {documents.map(doc => (
                               <div 
                                 key={doc.id}
                                 className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-dashed border-border"
