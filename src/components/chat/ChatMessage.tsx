@@ -24,13 +24,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
       <div
         className={cn(
-          'max-w-[80%] px-4 py-3 shadow-soft',
+          'min-w-[120px] max-w-[85%] px-4 py-3 shadow-soft',
           isAssistant
             ? 'chat-bubble-assistant text-foreground'
             : 'chat-bubble-user'
         )}
       >
-        <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
+        <p className="text-[15px] leading-relaxed whitespace-pre-wrap inline">
           {message.content}
         </p>
         <span className={cn(
