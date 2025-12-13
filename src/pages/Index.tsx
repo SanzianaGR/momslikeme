@@ -36,7 +36,7 @@ const Index = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {language === 'en' ? 'Bloom' : 'Bloom'}
+                Bloom
               </button>
               <button
                 onClick={() => setCurrentView('forum')}
@@ -71,6 +71,7 @@ const Index = () => {
             isLoading={isLoading}
             quickReplies={quickReplies}
             hasRecommendations={benefitMatches.length > 0}
+            benefitMatches={benefitMatches}
             language={language}
           />
         )}

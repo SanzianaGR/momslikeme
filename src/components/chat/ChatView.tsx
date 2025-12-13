@@ -1,11 +1,12 @@
-import { useRef, useState, useMemo } from 'react';
-import { ChatMessage as ChatMessageType } from '@/types';
+import { useRef, useState, useMemo, useEffect } from 'react';
+import { ChatMessage as ChatMessageType, BenefitMatch } from '@/types';
 import { BloomFlower } from './BloomFlower';
 import { MessageCard } from './MessageCard';
 import { OptionCard } from './OptionCard';
 import { QuoteCard } from './QuoteCard';
+import { ChatInputBox } from './ChatInputBox';
 import { SpeechButton } from '@/components/speech/SpeechButton';
-import { LanguageToggle } from './LanguageToggle';
+import { BenefitPopup } from './BenefitPopup';
 import { quotes, getRandomQuote } from '@/data/quotes';
 import { CloudDoodle, HeartDoodle, StarDoodle, SunDoodle } from './HandDrawnElements';
 import { Shield, Users, Home, Heart } from 'lucide-react';
@@ -16,11 +17,22 @@ interface ChatViewProps {
   isLoading: boolean;
   quickReplies?: string[];
   hasRecommendations?: boolean;
+  benefitMatches?: BenefitMatch[];
   language: 'en' | 'nl';
 }
 
-export function ChatView({ messages, onSendMessage, isLoading, quickReplies = [], hasRecommendations = false, language }: ChatViewProps) {
+export function ChatView({ 
+  messages, 
+  onSendMessage, 
+  isLoading, 
+  quickReplies = [], 
+  hasRecommendations = false, 
+  benefitMatches = [],
+  language 
+}: ChatViewProps) {
   const [hasStarted, setHasStarted] = useState(false);
+  const [showBenefitPopup, setShowBenefitPopup] = useState(false);
+  const [currentBenefitIndex, setCurrentBenefitIndex] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   
   // Calculate growth stage based on messages (0-5)
@@ -28,6 +40,17 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
   
   // Get a random quote for the hero
   const heroQuote = useMemo(() => getRandomQuote(), []);
+
+  // Show benefit popup when new matches are found
+  useEffect(() => {
+    if (benefitMatches.length > 0 && hasStarted && !isLoading) {
+      const timer = setTimeout(() => {
+        setShowBenefitPopup(true);
+        setCurrentBenefitIndex(0);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [benefitMatches.length, hasStarted, isLoading]);
 
   const startingOptions = [
     {
@@ -75,10 +98,18 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
     }
   };
 
+  const handleNextBenefit = () => {
+    if (currentBenefitIndex < benefitMatches.length - 1) {
+      setCurrentBenefitIndex(prev => prev + 1);
+    } else {
+      setShowBenefitPopup(false);
+    }
+  };
+
   return (
     <div className="w-full min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16 overflow-hidden">
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 py-16 overflow-hidden">
         {/* Background decorations */}
         <CloudDoodle className="absolute top-20 left-10 w-24 h-16 text-secondary/30 animate-float" />
         <StarDoodle className="absolute top-32 right-20 w-12 h-12 text-warning/40 animate-twinkle" />
@@ -86,21 +117,28 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
         <SunDoodle className="absolute top-40 right-10 w-16 h-16 text-warning/30 animate-spin-slow" />
         
         {/* Title */}
-        <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4 text-center hand-drawn-text">
+        <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-2 text-center hand-drawn-text">
           momslikeme
         </h1>
         
-        <p className="text-lg md:text-xl text-muted-foreground mb-8 text-center max-w-md">
+        {/* Impactful tagline */}
+        <p className="text-xl md:text-2xl text-primary font-bold mb-2 text-center">
           {language === 'en' 
-            ? 'Discover the benefits you deserve. Talk to Bloom.'
-            : 'Ontdek de toeslagen die je verdient. Praat met Bloom.'
+            ? 'You deserve support.'
+            : 'Je verdient steun.'
+          }
+        </p>
+        <p className="text-lg text-muted-foreground mb-8 text-center max-w-md">
+          {language === 'en' 
+            ? "Let's find what's rightfully yours."
+            : "Laten we vinden wat rechtmatig van jou is."
           }
         </p>
 
         {/* Bloom the flower */}
-        <div className="relative mb-8">
+        <div className="relative mb-6">
           <BloomFlower 
-            className="w-48 h-64 md:w-64 md:h-80" 
+            className="w-32 h-32 md:w-40 md:h-40" 
             speaking={isLoading}
             growthStage={growthStage}
             sparkling={hasRecommendations}
@@ -153,8 +191,20 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
               ))}
             </div>
 
+            {/* Text input */}
+            <div className="pt-6">
+              <p className="text-center text-sm text-muted-foreground mb-3">
+                {language === 'en' ? 'Or tell Bloom in your own words:' : 'Of vertel Bloom in je eigen woorden:'}
+              </p>
+              <ChatInputBox
+                onSend={handleStart}
+                isLoading={isLoading}
+                placeholder={language === 'en' ? 'Type your situation here...' : 'Typ hier je situatie...'}
+              />
+            </div>
+
             {/* Speech button */}
-            <div className="flex justify-center pt-8">
+            <div className="flex justify-center pt-6">
               <SpeechButton
                 onTranscript={handleSpeechTranscript}
                 language={language}
@@ -164,6 +214,16 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
         ) : (
           /* Conversation */
           <div className="max-w-2xl mx-auto space-y-6">
+            {/* Mini Bloom at top */}
+            <div className="flex justify-center mb-4">
+              <BloomFlower 
+                className="w-16 h-16" 
+                speaking={isLoading}
+                growthStage={growthStage}
+                sparkling={hasRecommendations}
+              />
+            </div>
+
             {/* Messages as cards */}
             {messages.map((message, index) => (
               <MessageCard
@@ -176,9 +236,11 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
 
             {/* Loading indicator */}
             {isLoading && (
-              <div className="flex items-center gap-3 text-muted-foreground animate-pulse">
-                <div className="w-8 h-8">
-                  <BloomFlower className="w-full h-full" speaking growthStage={1} />
+              <div className="flex items-center justify-center gap-3 text-muted-foreground py-4">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
                 <span className="text-sm">{language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}</span>
               </div>
@@ -186,7 +248,7 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
 
             {/* Quick replies */}
             {quickReplies.length > 0 && !isLoading && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 {quickReplies.map((reply, index) => (
                   <button
                     key={index}
@@ -202,13 +264,25 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
               </div>
             )}
 
-            {/* Speech button for continuing conversation */}
-            <div className="flex justify-center pt-4">
-              <SpeechButton
-                onTranscript={handleSpeechTranscript}
-                disabled={isLoading}
-                language={language}
-              />
+            {/* Input area */}
+            <div className="sticky bottom-4 bg-background/80 backdrop-blur-sm rounded-2xl p-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <ChatInputBox
+                    onSend={(msg) => {
+                      onSendMessage(msg);
+                      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                    }}
+                    isLoading={isLoading}
+                    placeholder={language === 'en' ? 'Type your message...' : 'Typ je bericht...'}
+                  />
+                </div>
+                <SpeechButton
+                  onTranscript={handleSpeechTranscript}
+                  disabled={isLoading}
+                  language={language}
+                />
+              </div>
             </div>
 
             <div ref={bottomRef} />
@@ -222,6 +296,16 @@ export function ChatView({ messages, onSendMessage, isLoading, quickReplies = []
           </div>
         )}
       </section>
+
+      {/* Benefit popup */}
+      {showBenefitPopup && benefitMatches[currentBenefitIndex] && (
+        <BenefitPopup
+          match={benefitMatches[currentBenefitIndex]}
+          language={language}
+          onClose={handleNextBenefit}
+          onAddToTasks={handleNextBenefit}
+        />
+      )}
     </div>
   );
 }
