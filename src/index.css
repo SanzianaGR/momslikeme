@@ -52,6 +52,9 @@
     --chart-4: 87 28% 61%;
     --chart-5: 15 45% 56%;
 
+    /* Success color for trust elements */
+    --success: 147 35% 45%;
+
     /* Custom tokens */
     --success: 147 35% 50%;
     --success-foreground: 0 0% 100%;
