@@ -3,9 +3,12 @@ import { ForumThread } from '@/types';
 import { ThreadCard } from './ThreadCard';
 import { NewThreadForm } from './NewThreadForm';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface ForumViewProps {
   language: 'en' | 'nl';
+  isLoggedIn?: boolean;
+  onLoginRequest?: () => void;
 }
 
 // Sample threads for demo
@@ -70,10 +73,11 @@ const categories = [
   { id: 'benefits', labelEn: 'Benefits', labelNl: 'Toeslagen' }
 ];
 
-export function ForumView({ language }: ForumViewProps) {
+export function ForumView({ language, isLoggedIn = false, onLoginRequest }: ForumViewProps) {
   const [threads, setThreads] = useState<ForumThread[]>(sampleThreads);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showNewThread, setShowNewThread] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const filteredThreads = selectedCategory === 'all' 
     ? threads 
@@ -101,20 +105,62 @@ export function ForumView({ language }: ForumViewProps) {
     setShowNewThread(false);
   };
 
+  const handlePostClick = () => {
+    if (!isLoggedIn) {
+      setShowLoginPrompt(true);
+    } else {
+      setShowNewThread(true);
+    }
+  };
+
+  const t = {
+    title: 'momslikeme',
+    subtitle: language === 'en' 
+      ? 'A community where single moms support each other'
+      : 'Een gemeenschap waar alleenstaande moeders elkaar steunen',
+    newPost: language === 'en' ? '+ Share your story or question' : '+ Deel je verhaal of vraag',
+    loginTitle: language === 'en' ? 'Join our community' : 'Word lid van onze community',
+    loginText: language === 'en' 
+      ? 'Create an account to share your story and connect with other moms like you.'
+      : 'Maak een account aan om je verhaal te delen en contact te leggen met andere moeders zoals jij.',
+    loginButton: language === 'en' ? 'Create Account' : 'Account Aanmaken',
+    cancel: language === 'en' ? 'Maybe later' : 'Misschien later',
+    noThreads: language === 'en' ? 'No threads yet in this category' : 'Nog geen berichten in deze categorie',
+  };
+
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-background py-8 px-4 relative">
+      {/* Animated doodles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <svg
+            key={i}
+            className="absolute animate-float opacity-15"
+            style={{
+              left: `${10 + i * 15}%`,
+              top: `${20 + Math.sin(i) * 15}%`,
+              animationDelay: `${i * 0.7}s`,
+              width: 24,
+              height: 24,
+            }}
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 21C12 21 4 13.5 4 8.5C4 5.46 6.46 3 9.5 3C11.06 3 12.5 3.8 13 5C13.5 3.8 14.94 3 16.5 3C19.54 3 22 5.46 22 8.5C22 13.5 12 21 12 21Z"
+              className="stroke-primary fill-primary/20"
+              strokeWidth="1.5"
+            />
+          </svg>
+        ))}
+      </div>
+
+      <div className="max-w-3xl mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 hand-drawn-text">
-            momslikeme
+            {t.title}
           </h1>
-          <p className="text-muted-foreground">
-            {language === 'en' 
-              ? 'A community where single moms support each other'
-              : 'Een gemeenschap waar alleenstaande moeders elkaar steunen'
-            }
-          </p>
+          <p className="text-muted-foreground">{t.subtitle}</p>
         </div>
 
         {/* Category filters */}
@@ -138,14 +184,64 @@ export function ForumView({ language }: ForumViewProps) {
 
         {/* New thread button */}
         <button
-          onClick={() => setShowNewThread(true)}
+          onClick={handlePostClick}
           className="w-full mb-6 p-4 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-primary font-medium hover:bg-primary/10 transition-all"
         >
-          {language === 'en' ? '+ Share your story or question' : '+ Deel je verhaal of vraag'}
+          {t.newPost}
         </button>
 
+        {/* Login prompt modal */}
+        {showLoginPrompt && (
+          <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl p-8 max-w-md w-full border-2 border-dashed border-primary/30 animate-scale-in text-center">
+              {/* Decorative flower */}
+              <div className="w-20 h-20 mx-auto mb-4">
+                <svg viewBox="0 0 80 80" className="w-full h-full animate-bounce-gentle">
+                  {[0, 72, 144, 216, 288].map((angle, i) => (
+                    <ellipse
+                      key={i}
+                      cx="40"
+                      cy="15"
+                      rx="12"
+                      ry="18"
+                      className="fill-primary/60"
+                      transform={`rotate(${angle} 40 40)`}
+                    />
+                  ))}
+                  <circle cx="40" cy="40" r="14" className="fill-warning" />
+                  <circle cx="36" cy="38" r="2" className="fill-foreground" />
+                  <circle cx="44" cy="38" r="2" className="fill-foreground" />
+                  <path d="M35 44 Q40 48 45 44" className="stroke-foreground fill-none" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+              
+              <h2 className="text-xl font-bold mb-2">{t.loginTitle}</h2>
+              <p className="text-muted-foreground mb-6">{t.loginText}</p>
+              
+              <div className="flex flex-col gap-3">
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    setShowLoginPrompt(false);
+                    onLoginRequest?.();
+                  }}
+                >
+                  {t.loginButton}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full"
+                  onClick={() => setShowLoginPrompt(false)}
+                >
+                  {t.cancel}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* New thread form */}
-        {showNewThread && (
+        {showNewThread && isLoggedIn && (
           <NewThreadForm
             language={language}
             onSubmit={handleNewThread}
@@ -168,7 +264,7 @@ export function ForumView({ language }: ForumViewProps) {
 
         {filteredThreads.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <p>{language === 'en' ? 'No threads yet in this category' : 'Nog geen berichten in deze categorie'}</p>
+            <p>{t.noThreads}</p>
           </div>
         )}
       </div>

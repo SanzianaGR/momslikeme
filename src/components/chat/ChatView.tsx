@@ -19,6 +19,7 @@ interface ChatViewProps {
   hasRecommendations?: boolean;
   benefitMatches?: BenefitMatch[];
   language: 'en' | 'nl';
+  onAddBenefitToTasks?: (benefit: import('@/types').Benefit, matchScore: number) => void;
 }
 
 export function ChatView({ 
@@ -28,7 +29,8 @@ export function ChatView({
   quickReplies = [], 
   hasRecommendations = false, 
   benefitMatches = [],
-  language 
+  language,
+  onAddBenefitToTasks
 }: ChatViewProps) {
   const [hasStarted, setHasStarted] = useState(false);
   const [showBenefitPopup, setShowBenefitPopup] = useState(false);
@@ -303,7 +305,11 @@ export function ChatView({
           match={benefitMatches[currentBenefitIndex]}
           language={language}
           onClose={handleNextBenefit}
-          onAddToTasks={handleNextBenefit}
+          onAddToTasks={() => {
+            const match = benefitMatches[currentBenefitIndex];
+            onAddBenefitToTasks?.(match.benefit, match.matchScore);
+            handleNextBenefit();
+          }}
         />
       )}
     </div>
