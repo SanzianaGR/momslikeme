@@ -7,9 +7,10 @@ import { QuoteCard } from './QuoteCard';
 import { ChatInputBox } from './ChatInputBox';
 import { SpeechButton } from '@/components/speech/SpeechButton';
 import { BenefitPopup } from './BenefitPopup';
+import { HelpRequestPopup } from '@/components/mybenefits/HelpRequestPopup';
 import { quotes, getRandomQuote } from '@/data/quotes';
 import { CoinDoodle, MoneyBagDoodle, BanknoteDoodle, CoinsStackDoodle } from './HandDrawnElements';
-import { Shield, Users, Home, Heart, ArrowUp } from 'lucide-react';
+import { Shield, Users, Home, Heart, ArrowUp, RotateCcw } from 'lucide-react';
 
 interface ChatViewProps {
   messages: ChatMessageType[];
@@ -22,6 +23,7 @@ interface ChatViewProps {
   benefitMatches?: BenefitMatch[];
   language: 'en' | 'nl';
   onAddBenefitToTasks?: (benefit: import('@/types').Benefit, matchScore: number) => void;
+  onReset?: () => void;
 }
 
 export function ChatView({ 
@@ -34,12 +36,14 @@ export function ChatView({
   hasRecommendations = false, 
   benefitMatches = [],
   language,
-  onAddBenefitToTasks
+  onAddBenefitToTasks,
+  onReset
 }: ChatViewProps) {
   const [hasStarted, setHasStarted] = useState(false);
   const [showBenefitPopup, setShowBenefitPopup] = useState(false);
   const [currentBenefitIndex, setCurrentBenefitIndex] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showHelpPopup, setShowHelpPopup] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   
@@ -49,13 +53,19 @@ export function ChatView({
   // Get a random quote for the hero
   const heroQuote = useMemo(() => getRandomQuote(), []);
 
-  // Show/hide scroll to top button
+  // Show/hide scroll to top button and listen for help request event
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
     };
+    const handleOpenHelp = () => setShowHelpPopup(true);
+    
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('openHelpRequest', handleOpenHelp);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('openHelpRequest', handleOpenHelp);
+    };
   }, []);
 
   const scrollToTop = () => {
@@ -108,6 +118,14 @@ export function ChatView({
     setHasStarted(true);
     onSendMessage(message);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+  };
+
+  const handleReset = () => {
+    setHasStarted(false);
+    setShowBenefitPopup(false);
+    setCurrentBenefitIndex(0);
+    onReset?.();
+    scrollToTop();
   };
 
   const handleSpeechTranscript = (text: string) => {
@@ -385,6 +403,14 @@ export function ChatView({
             <div className="sticky bottom-4 mt-6">
               <div className="bg-background/80 backdrop-blur-sm rounded-2xl p-3 border border-border/30">
                 <div className="flex items-center gap-3">
+                  {/* Reset button */}
+                  <button
+                    onClick={handleReset}
+                    className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                    title={language === 'en' ? 'Start over' : 'Opnieuw beginnen'}
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                  </button>
                   <div className="flex-1">
                     <ChatInputBox
                       onSend={(msg) => {
@@ -430,6 +456,13 @@ export function ChatView({
           }}
         />
       )}
+
+      {/* Help request popup */}
+      <HelpRequestPopup
+        open={showHelpPopup}
+        onClose={() => setShowHelpPopup(false)}
+        language={language}
+      />
 
       {/* Scroll to top button */}
       {showScrollTop && (
