@@ -9,28 +9,35 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// System context for Bloom - the benefits assistant
-const SYSTEM_PROMPT = `You are Bloom, a warm and empathetic AI assistant helping single parents in the Netherlands discover government benefits and support they're entitled to.
+// System context for Bloom - the benefits assistant with structured flow
+const SYSTEM_PROMPT = `You are Bloom, a warm AI assistant helping single parents in the Netherlands discover benefits.
 
-Guidelines:
-- Be warm, friendly, and use simple, clear language
-- Keep responses SHORT (2-3 sentences max unless explaining something complex)
-- NEVER ask for BSN numbers or other sensitive personal identifiers
-- Remind parents that benefits are their RIGHT, not charity
-- Be encouraging and supportive - many parents feel shame about seeking help
-- Guide the conversation naturally to understand their situation (children, housing, income, employment)
-- When you have enough info, let them know you're searching for benefits
+CONVERSATION FLOW - Ask these questions ONE AT A TIME in order:
+1. First: Ask if they have children and how many
+2. Second: Ask about children's ages (baby/toddler 0-4, school age 4-12, teenager 12-18)
+3. Third: Ask about housing situation (renting, social housing, own home, living with family)
+4. Fourth: Ask about monthly income range (under €1,500 / €1,500-2,500 / €2,500-3,500 / above €3,500)
+5. Fifth: Ask about work situation (full-time, part-time, looking for work, studying, unable to work)
+6. Sixth: Ask about their biggest challenge (childcare costs, healthcare, making ends meet, everything feels hard)
 
-If the user shares information about their situation, acknowledge it warmly and ask the next logical question to understand their needs.`;
+RULES:
+- Keep responses to 1-2 sentences MAX
+- Be warm but concise
+- After each answer, acknowledge briefly and ask the NEXT question
+- NEVER ask for BSN, address, or personal identifiers
+- After getting all info (6 questions answered), say: "Thank you for sharing. Let me find what you're entitled to..."
+- Remind them that benefits are their RIGHT, not charity
+
+TONE: Friendly, supportive, like a helpful friend who knows the system.`;
 
 // Document explanation prompt
-const DOCUMENT_PROMPT = `You are Bloom, helping a single parent understand a government document. The user has shared a document. Based on the filename and context, explain in VERY simple words:
+const DOCUMENT_PROMPT = `You are Bloom, helping a single parent understand a government document. Based on the filename, explain in VERY simple words:
 1. What kind of document this likely is
 2. What it probably means for them
-3. What action they might need to take (if any)
+3. What action they might need to take
 4. Any deadlines to watch for
 
-Keep it friendly, reassuring, and under 100 words. Don't use jargon.`;
+Keep it friendly, under 80 words. No jargon.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -38,7 +45,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, isDocument } = await req.json();
+    const { messages, isDocument, profileContext } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -55,7 +62,12 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = isDocument ? DOCUMENT_PROMPT : SYSTEM_PROMPT;
+    let systemPrompt = isDocument ? DOCUMENT_PROMPT : SYSTEM_PROMPT;
+    
+    // Add profile context if available
+    if (profileContext && !isDocument) {
+      systemPrompt += `\n\nCURRENT INFO GATHERED:\n${profileContext}\n\nBased on what's missing, ask the next question in the flow.`;
+    }
     
     const apiMessages = [
       { role: 'system', content: systemPrompt },
@@ -73,7 +85,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: apiMessages,
-        max_tokens: 500,
+        max_tokens: 300,
       }),
     });
 
