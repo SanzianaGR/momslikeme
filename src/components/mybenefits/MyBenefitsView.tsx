@@ -1,10 +1,11 @@
 import { Task } from '@/types';
 import { useState } from 'react';
-import { ChevronDown, Euro, ExternalLink, Download, Mail, Sparkles, Users, FileText, ListChecks, Phone, HelpCircle, AlertCircle } from 'lucide-react';
+import { ChevronDown, Euro, ExternalLink, Download, Mail, Users, FileText, ListChecks, Phone, HelpCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HandDrawnCheckbox } from './HandDrawnCheckbox';
 import { FloatingDoodles } from './FloatingDoodles';
 import { allBenefits, BenefitFull } from '@/data/allBenefits';
+import jsPDF from 'jspdf';
 
 interface MyBenefitsViewProps {
   tasks: Task[];
@@ -37,7 +38,7 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
     importantNotes: language === 'nl' ? 'Belangrijk om te weten' : 'Important to know',
     amount: language === 'nl' ? 'Wat je krijgt' : 'What you\'ll receive',
     apply: language === 'nl' ? 'Ga naar aanvraag' : 'Go to application',
-    download: language === 'nl' ? 'Download als PDF' : 'Download as PDF',
+    download: language === 'nl' ? 'Download je informatie' : 'Download your information',
     email: language === 'nl' ? 'Verstuur naar mijn email' : 'Send to my email',
     youDeserve: language === 'nl' ? 'Je verdient dit. Laten we het regelen.' : 'You deserve this. Let\'s make it happen.',
     itemsCompleted: language === 'nl' ? 'items afgevinkt' : 'items completed',
@@ -47,6 +48,11 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
       ? 'Je kunt gratis hulp krijgen bij het Sociaal Wijkteam in je gemeente. Zij kunnen je helpen met formulieren en documenten.' 
       : 'You can get free help from the Social District Team (Sociaal Wijkteam) in your municipality. They can help you with forms and documents.',
     findWijkteam: language === 'nl' ? 'Zoek je wijkteam' : 'Find your local team',
+    pdfTitle: language === 'nl' ? 'Jouw Voordelen Overzicht' : 'Your Benefits Overview',
+    pdfGenerated: language === 'nl' ? 'Gegenereerd op' : 'Generated on',
+    pdfDocuments: language === 'nl' ? 'Benodigde documenten' : 'Required documents',
+    pdfSteps: language === 'nl' ? 'Stappen om aan te vragen' : 'Steps to apply',
+    pdfWebsite: language === 'nl' ? 'Officiële website' : 'Official website',
   };
 
   const toggleSection = (taskId: string, section: string) => {
@@ -64,42 +70,163 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
   };
 
   const handleDownloadPDF = () => {
-    const printContent = tasks.map(task => {
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
+    let yPos = 20;
+
+    // Helper to add new page if needed
+    const checkNewPage = (neededHeight: number) => {
+      if (yPos + neededHeight > pdf.internal.pageSize.getHeight() - 20) {
+        pdf.addPage();
+        yPos = 20;
+      }
+    };
+
+    // Title
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('momslikeme', margin, yPos);
+    yPos += 10;
+    
+    pdf.setFontSize(16);
+    pdf.text(t.pdfTitle, margin, yPos);
+    yPos += 8;
+    
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`${t.pdfGenerated}: ${new Date().toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`, margin, yPos);
+    yPos += 15;
+
+    // Motivational line
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text(t.youDeserve, margin, yPos);
+    yPos += 15;
+
+    // Each benefit
+    tasks.forEach((task, index) => {
+      const benefitFull = getBenefitDetails(task.benefitId);
       const name = language === 'nl' ? (task.titleNl || task.title) : task.title;
-      const desc = language === 'nl' ? (task.descriptionNl || task.description) : task.description;
-      const steps = (task.steps || []).map(s => `${s.completed ? '✓' : '○'} ${language === 'nl' ? s.titleNl : s.title}`).join('\n');
-      const docs = (task.documents || []).map(d => `- ${language === 'nl' ? d.nameNl : d.name}`).join('\n');
+      const description = language === 'nl' ? (task.descriptionNl || task.description) : task.description;
       
-      return `
-═══════════════════════════════════════
-${name}
-═══════════════════════════════════════
-${desc || ''}
+      checkNewPage(60);
 
-💰 ${t.amount}: ${task.estimatedAmount || 'Varies'}
-🔗 ${task.applicationUrl || 'Contact for details'}
+      // Benefit header
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`${index + 1}. ${name}`, margin, yPos);
+      yPos += 7;
 
-${t.whatYouNeed}:
-${steps}
-${docs}
-      `;
-    }).join('\n\n');
+      // Amount
+      if (task.estimatedAmount) {
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`${t.amount}: ${task.estimatedAmount}`, margin + 5, yPos);
+        yPos += 6;
+      }
 
-    const blob = new Blob([`momslikeme - ${t.title}\n\n${t.youDeserve}\n\n${printContent}`], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'my-benefits.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+      // Description
+      if (description) {
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        const descLines = pdf.splitTextToSize(description, contentWidth - 10);
+        pdf.text(descLines, margin + 5, yPos);
+        yPos += descLines.length * 5 + 5;
+      }
+
+      // Required documents
+      const requiredDocs = benefitFull
+        ? (language === 'nl' ? (benefitFull.requiredDocumentsNl || benefitFull.requiredDocuments) : benefitFull.requiredDocuments)
+        : [];
+      
+      if (requiredDocs.length > 0) {
+        checkNewPage(20 + requiredDocs.length * 5);
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(t.pdfDocuments + ':', margin + 5, yPos);
+        yPos += 5;
+        
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+        requiredDocs.forEach(doc => {
+          const docLines = pdf.splitTextToSize(`- ${doc}`, contentWidth - 15);
+          checkNewPage(docLines.length * 4);
+          pdf.text(docLines, margin + 10, yPos);
+          yPos += docLines.length * 4 + 1;
+        });
+        yPos += 3;
+      }
+
+      // How to apply steps
+      const howToApply = benefitFull
+        ? (language === 'nl' ? (benefitFull.howToApplyNl || benefitFull.howToApply) : benefitFull.howToApply)
+        : [];
+      
+      if (howToApply.length > 0) {
+        checkNewPage(15 + howToApply.length * 5);
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(t.pdfSteps + ':', margin + 5, yPos);
+        yPos += 5;
+        
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+        howToApply.forEach((step, i) => {
+          const stepLines = pdf.splitTextToSize(`${i + 1}. ${step}`, contentWidth - 15);
+          checkNewPage(stepLines.length * 4);
+          pdf.text(stepLines, margin + 10, yPos);
+          yPos += stepLines.length * 4 + 1;
+        });
+        yPos += 3;
+      }
+
+      // Official website
+      const officialUrl = benefitFull?.officialWebsite || task.applicationUrl;
+      if (officialUrl) {
+        checkNewPage(10);
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${t.pdfWebsite}: `, margin + 5, yPos);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 102, 204);
+        pdf.text(officialUrl, margin + 5 + pdf.getTextWidth(`${t.pdfWebsite}: `), yPos);
+        pdf.setTextColor(0, 0, 0);
+        yPos += 10;
+      }
+
+      yPos += 10;
+    });
+
+    // Footer with help info
+    checkNewPage(30);
+    yPos += 5;
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+    
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(t.needHelp, margin, yPos);
+    yPos += 5;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    const helpLines = pdf.splitTextToSize(t.helpText, contentWidth);
+    pdf.text(helpLines, margin, yPos);
+
+    // Save
+    pdf.save('momslikeme-benefits.pdf');
   };
 
   const handleSendEmail = () => {
     const subject = encodeURIComponent(`momslikeme - ${t.title}`);
     const body = encodeURIComponent(`${t.youDeserve}\n\n${tasks.map(task => {
       const name = language === 'nl' ? (task.titleNl || task.title) : task.title;
-      return `• ${name} - ${task.estimatedAmount || ''}`;
-    }).join('\n')}`);
+      const benefitFull = getBenefitDetails(task.benefitId);
+      const url = benefitFull?.officialWebsite || task.applicationUrl || '';
+      return `- ${name}${task.estimatedAmount ? ` (${task.estimatedAmount})` : ''}\n  ${url}`;
+    }).join('\n\n')}`);
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
@@ -109,11 +236,7 @@ ${docs}
       
       {/* Header */}
       <div className="relative z-10 px-6 py-8 text-center">
-        <div className="inline-flex items-center gap-2 mb-4">
-          <Sparkles className="h-6 w-6 text-warning animate-pulse-slow" />
-          <h1 className="font-nunito text-3xl font-bold text-foreground">{t.title}</h1>
-          <Sparkles className="h-6 w-6 text-warning animate-pulse-slow" />
-        </div>
+        <h1 className="font-nunito text-3xl font-bold text-foreground mb-2">{t.title}</h1>
         <p className="text-muted-foreground max-w-md mx-auto">{t.subtitle}</p>
       </div>
 
