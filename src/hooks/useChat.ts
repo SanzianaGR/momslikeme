@@ -246,6 +246,31 @@ export function useChat() {
   const [conversationHistory, setConversationHistory] = useState<{ role: string; content: string }[]>([]);
 
   const sendMessage = useCallback(async (content: string) => {
+    // Handle PDF quick replies
+    if (pendingPdfFile && (content === 'Analyze & explain it' || content === 'Help me fill it in')) {
+      if (content === 'Analyze & explain it') {
+        const userMsg: ChatMessage = {
+          id: generateId(),
+          role: 'user',
+          content,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, userMsg]);
+        await analyzeDocument(pendingPdfFile.name);
+        return;
+      } else {
+        const userMsg: ChatMessage = {
+          id: generateId(),
+          role: 'user',
+          content,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, userMsg]);
+        await startPdfFill(pendingPdfFile);
+        return;
+      }
+    }
+
     const userMessage: ChatMessage = {
       id: generateId(),
       role: 'user',
@@ -334,28 +359,21 @@ export function useChat() {
     }
   }
 
-  const sendFile = useCallback(async (file: File) => {
-    const userMessage: ChatMessage = {
-      id: generateId(),
-      role: 'user',
-      content: `📎 Shared document: ${file.name}`,
-      timestamp: new Date().toISOString(),
-    };
+  const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
+  const [pdfMode, setPdfMode] = useState<'none' | 'analyze' | 'fill'>('none');
 
-    setMessages(prev => [...prev, userMessage]);
+  const analyzeDocument = async (filename: string) => {
     setIsLoading(true);
     setIsTyping(true);
     setQuickReplies([]);
 
-    // Create context for document analysis
-    const documentContext = `The user shared a document called "${file.name}". Based on common Dutch government documents, help them understand what this document likely is and what they should do.`;
+    const documentContext = `The user shared a document called "${filename}". Based on common Dutch government documents, help them understand what this document likely is and what they should do.`;
     
     const docHistory = [
       ...conversationHistory,
       { role: 'user', content: documentContext }
     ];
 
-    // Call AI with document flag for specialized prompt
     const aiResponse = await callAI(docHistory, true);
     
     await new Promise(resolve => setTimeout(resolve, getTypingDelay(aiResponse || 'Looking at your document...')));
@@ -377,6 +395,74 @@ export function useChat() {
     ]);
     setQuickReplies(['What should I do next?', 'Is there a deadline?', 'Continue with benefits']);
     setIsLoading(false);
+    setPendingPdfFile(null);
+    setPdfMode('none');
+  };
+
+  const startPdfFill = async (file: File) => {
+    setPdfMode('fill');
+    setIsLoading(true);
+    setIsTyping(true);
+    setQuickReplies([]);
+
+    const fillContext = `The user wants help filling in a PDF form called "${file.name}". This is likely a Dutch government form. Ask them for the information typically needed, one question at a time. Start by asking about their basic info. Be warm and helpful.`;
+    
+    const docHistory = [
+      ...conversationHistory,
+      { role: 'user', content: `I want help filling in ${file.name}` }
+    ];
+
+    const aiResponse = await callAI([...docHistory, { role: 'user', content: fillContext }], false);
+    
+    await new Promise(resolve => setTimeout(resolve, getTypingDelay(aiResponse || 'Let me help you...')));
+    setIsTyping(false);
+
+    const response = aiResponse || "I'll help you fill in this form! Let's start with some basic information. What's your full name as it appears on official documents?";
+
+    const assistantMessage: ChatMessage = {
+      id: generateId(),
+      role: 'assistant',
+      content: response,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, assistantMessage]);
+    setConversationHistory(prev => [...prev, 
+      { role: 'user', content: `I want help filling in ${file.name}` },
+      { role: 'assistant', content: response }
+    ]);
+    setIsLoading(false);
+    setPendingPdfFile(null);
+  };
+
+  const sendFile = useCallback(async (file: File) => {
+    const isPdf = file.name.toLowerCase().endsWith('.pdf');
+    
+    const userMessage: ChatMessage = {
+      id: generateId(),
+      role: 'user',
+      content: `📎 Shared document: ${file.name}`,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+
+    if (isPdf) {
+      setPendingPdfFile(file);
+      
+      const askMessage: ChatMessage = {
+        id: generateId(),
+        role: 'assistant',
+        content: `I see you've shared a PDF document. What would you like me to do with it?`,
+        timestamp: new Date().toISOString(),
+      };
+      
+      setMessages(prev => [...prev, askMessage]);
+      setQuickReplies(['Analyze & explain it', 'Help me fill it in']);
+      return;
+    }
+
+    await analyzeDocument(file.name);
   }, [conversationHistory]);
 
   const addTaskForBenefit = useCallback((benefitId: string) => {
@@ -425,6 +511,8 @@ export function useChat() {
     setConversationHistory([]);
     setIsLoading(false);
     setIsTyping(false);
+    setPendingPdfFile(null);
+    setPdfMode('none');
   }, []);
 
   return {
@@ -435,6 +523,7 @@ export function useChat() {
     profile,
     benefitMatches,
     tasks,
+    pdfMode,
     sendMessage,
     sendFile,
     addTaskForBenefit,
