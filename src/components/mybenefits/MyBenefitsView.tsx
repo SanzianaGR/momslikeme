@@ -1,9 +1,10 @@
 import { Task } from '@/types';
 import { useState } from 'react';
-import { ChevronDown, Euro, ExternalLink, Download, Mail, Users, FileText, ListChecks, Phone, HelpCircle, AlertCircle } from 'lucide-react';
+import { ChevronDown, Euro, ExternalLink, Download, Mail, Users, FileText, ListChecks, HelpCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HandDrawnCheckbox } from './HandDrawnCheckbox';
 import { FloatingDoodles } from './FloatingDoodles';
+import { HelpRequestPopup } from './HelpRequestPopup';
 import { allBenefits, BenefitFull } from '@/data/allBenefits';
 import jsPDF from 'jspdf';
 
@@ -16,6 +17,7 @@ interface MyBenefitsViewProps {
 export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsViewProps) {
   const [expandedTask, setExpandedTask] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, string[]>>({});
+  const [showHelpPopup, setShowHelpPopup] = useState(false);
 
   // Get full benefit details from allBenefits
   const getBenefitDetails = (benefitId?: string): BenefitFull | undefined => {
@@ -47,7 +49,8 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
     helpText: language === 'nl' 
       ? 'Je kunt gratis hulp krijgen bij het Sociaal Wijkteam in je gemeente. Zij kunnen je helpen met formulieren en documenten.' 
       : 'You can get free help from the Social District Team (Sociaal Wijkteam) in your municipality. They can help you with forms and documents.',
-    findWijkteam: language === 'nl' ? 'Zoek je wijkteam' : 'Find your local team',
+    askForHelp: language === 'nl' ? 'Vraag om hulp' : 'Ask for help',
+    freeSupport: language === 'nl' ? 'Je verdient gratis ondersteuning' : 'You deserve support for free',
     pdfTitle: language === 'nl' ? 'Jouw Voordelen Overzicht' : 'Your Benefits Overview',
     pdfGenerated: language === 'nl' ? 'Gegenereerd op' : 'Generated on',
     pdfDocuments: language === 'nl' ? 'Benodigde documenten' : 'Required documents',
@@ -233,11 +236,13 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <FloatingDoodles />
+      <HelpRequestPopup open={showHelpPopup} onClose={() => setShowHelpPopup(false)} language={language} />
       
       {/* Header */}
       <div className="relative z-10 px-6 py-8 text-center">
         <h1 className="font-nunito text-3xl font-bold text-foreground mb-2">{t.title}</h1>
         <p className="text-muted-foreground max-w-md mx-auto">{t.subtitle}</p>
+        <p className="text-primary font-medium mt-2">{t.freeSupport}</p>
       </div>
 
       {/* Action buttons */}
@@ -549,34 +554,22 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
                       )}
 
                       {/* Need help section */}
-                      <div>
-                        <button
-                          onClick={() => toggleSection(task.id, 'help')}
-                          className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                      <div className="px-6 py-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <HelpCircle className="h-5 w-5 text-secondary" />
+                          <span className="font-medium">{t.needHelp}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4 ml-8">
+                          {t.helpText}
+                        </p>
+                        <Button 
+                          variant="outline"
+                          className="w-full border-2 border-dashed border-secondary/50"
+                          onClick={() => setShowHelpPopup(true)}
                         >
-                          <div className="flex items-center gap-3">
-                            <HelpCircle className="h-5 w-5 text-secondary" />
-                            <span className="font-medium">{t.needHelp}</span>
-                          </div>
-                          <ChevronDown 
-                            className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSectionExpanded(task.id, 'help') ? 'rotate-180' : ''}`}
-                          />
-                        </button>
-                        {isSectionExpanded(task.id, 'help') && (
-                          <div className="px-6 pb-4 animate-fade-in">
-                            <p className="text-sm text-muted-foreground mb-4 ml-8">
-                              {t.helpText}
-                            </p>
-                            <Button 
-                              variant="outline"
-                              className="w-full border-2 border-dashed border-secondary/50"
-                              onClick={() => window.open('https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/sociaal-wijkteam', '_blank')}
-                            >
-                              <Phone className="h-4 w-4 mr-2" />
-                              {t.findWijkteam}
-                            </Button>
-                          </div>
-                        )}
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                          {t.askForHelp}
+                        </Button>
                       </div>
                     </div>
                   )}
