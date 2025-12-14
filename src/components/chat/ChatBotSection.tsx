@@ -10,7 +10,9 @@ import { Users, Home, Heart, ArrowRight, Shield } from 'lucide-react';
 interface ChatBotSectionProps {
   messages: ChatMessageType[];
   onSendMessage: (message: string) => void;
+  onSendFile?: (file: File) => void;
   isLoading: boolean;
+  isTyping?: boolean;
   quickReplies?: string[];
   hasStarted: boolean;
   onStart: (message: string) => void;
@@ -19,8 +21,10 @@ interface ChatBotSectionProps {
 
 export function ChatBotSection({ 
   messages, 
-  onSendMessage, 
-  isLoading, 
+  onSendMessage,
+  onSendFile,
+  isLoading,
+  isTyping = false,
   quickReplies = [],
   hasStarted,
   onStart,
@@ -153,14 +157,15 @@ export function ChatBotSection({
                     <ChatMessage key={msg.id} message={msg} />
                   ))}
                   
-                  {isLoading && (
+                  {isTyping && (
                     <div className="flex gap-3 animate-fade-in">
                       <FlowerBot className="w-10 h-12 shrink-0" speaking />
                       <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                        <div className="flex gap-1.5">
-                          <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <div className="flex gap-1.5 items-center">
+                          <span className="text-xs text-muted-foreground mr-2">typing</span>
+                          <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '300ms' }} />
                         </div>
                       </div>
                     </div>
@@ -183,6 +188,7 @@ export function ChatBotSection({
               <div className="p-4 border-t border-border/50 bg-muted/30">
                 <ChatInput
                   onSend={hasStarted ? onSendMessage : onStart}
+                  onSendFile={onSendFile}
                   isLoading={isLoading}
                   placeholder={hasStarted ? t('chat.input.placeholder') : t('chat.input.welcome')}
                 />
