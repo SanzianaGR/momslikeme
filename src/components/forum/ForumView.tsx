@@ -90,6 +90,24 @@ export function ForumView({ language }: ForumViewProps) {
     ));
   };
 
+  const handleReply = (threadId: string, content: string) => {
+    const newReply = {
+      id: Math.random().toString(36).substr(2, 9),
+      content,
+      authorId: 'currentUser',
+      authorName: 'You',
+      upvotes: 0,
+      upvotedBy: [],
+      createdAt: new Date().toISOString()
+    };
+    
+    setThreads(prev => prev.map(t => 
+      t.id === threadId 
+        ? { ...t, replies: [...t.replies, newReply] }
+        : t
+    ));
+  };
+
   const handleNewThread = (thread: Omit<ForumThread, 'id' | 'upvotes' | 'upvotedBy' | 'replies' | 'createdAt' | 'updatedAt'>) => {
     const newThread: ForumThread = {
       ...thread,
@@ -215,6 +233,8 @@ export function ForumView({ language }: ForumViewProps) {
               thread={thread}
               language={language}
               onUpvote={() => handleUpvote(thread.id)}
+              isLoggedIn={isLoggedIn}
+              onReply={(content) => handleReply(thread.id, content)}
               delay={index * 0.1}
             />
           ))}

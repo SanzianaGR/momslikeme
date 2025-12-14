@@ -8,7 +8,7 @@ import { ChatInputBox } from './ChatInputBox';
 import { SpeechButton } from '@/components/speech/SpeechButton';
 import { BenefitPopup } from './BenefitPopup';
 import { quotes, getRandomQuote } from '@/data/quotes';
-import { CloudDoodle, HeartDoodle, StarDoodle, SunDoodle } from './HandDrawnElements';
+import { CoinDoodle, MoneyBagDoodle, BanknoteDoodle, CoinsStackDoodle } from './HandDrawnElements';
 import { Shield, Users, Home, Heart, ArrowUp } from 'lucide-react';
 
 interface ChatViewProps {
@@ -138,11 +138,13 @@ export function ChatView({
       <div ref={topRef} />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 py-16 overflow-hidden">
-        {/* Background decorations */}
-        <CloudDoodle className="absolute top-20 left-10 w-24 h-16 text-secondary/30 animate-float" />
-        <StarDoodle className="absolute top-32 right-20 w-12 h-12 text-warning/40 animate-twinkle" />
-        <HeartDoodle className="absolute bottom-40 left-20 w-10 h-10 text-destructive/30 animate-bounce-gentle" />
-        <SunDoodle className="absolute top-40 right-10 w-16 h-16 text-warning/30 animate-spin-slow" />
+        {/* Background decorations - Money themed */}
+        <CoinDoodle className="absolute top-20 left-10 w-16 h-16 animate-float" />
+        <MoneyBagDoodle className="absolute top-28 right-16 w-20 h-24 animate-bounce-gentle" />
+        <BanknoteDoodle className="absolute bottom-40 left-16 w-24 h-12 animate-float" style={{ animationDelay: '1s' }} />
+        <CoinsStackDoodle className="absolute top-40 right-8 w-14 h-18 animate-float" style={{ animationDelay: '0.5s' }} />
+        <CoinDoodle className="absolute bottom-32 right-24 w-10 h-10 animate-bounce-gentle" style={{ animationDelay: '1.5s' }} />
+        <MoneyBagDoodle className="absolute top-1/3 left-4 w-12 h-14 animate-float opacity-60" style={{ animationDelay: '2s' }} />
         
         {/* Title */}
         <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-2 text-center hand-drawn-text">
