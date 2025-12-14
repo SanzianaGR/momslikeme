@@ -72,7 +72,7 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
           
           {/* Flower head - bobs */}
           <g className="animate-head-bob" style={{ transformOrigin: '60px 50px' }}>
-            {/* Outer petals - neutral sage/olive tones */}
+            {/* Outer petals - warm peachy pink */}
             <g className="animate-petals-breathe" style={{ transformOrigin: '60px 50px' }}>
               {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
                 <ellipse
@@ -81,14 +81,14 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
                   cy="20"
                   rx="18"
                   ry="28"
-                  className="fill-[hsl(140,25%,65%)]"
+                  className="fill-[hsl(350,75%,82%)]"
                   transform={`rotate(${angle} 60 50)`}
-                  style={{ opacity: 0.85 - i * 0.02 }}
+                  style={{ opacity: 0.9 - i * 0.02 }}
                 />
               ))}
             </g>
 
-            {/* Inner petals - muted green */}
+            {/* Inner petals - warmer orange-ish */}
             <g>
               {[0, 60, 120, 180, 240, 300].map((angle, i) => (
                 <ellipse
@@ -97,36 +97,36 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
                   cy="30"
                   rx="12"
                   ry="20"
-                  className="fill-[hsl(145,30%,55%)]"
+                  className="fill-[hsl(30,80%,78%)]"
                   transform={`rotate(${angle} 60 50)`}
                 />
               ))}
             </g>
 
-            {/* Face center - warm neutral beige */}
-            <circle cx="60" cy="50" r="24" className="fill-[hsl(35,40%,75%)]" />
-            <circle cx="60" cy="50" r="20" className="fill-[hsl(38,45%,82%)]" />
+            {/* Face center - warm cream */}
+            <circle cx="60" cy="50" r="24" className="fill-[hsl(45,85%,70%)]" />
+            <circle cx="60" cy="50" r="20" className="fill-[hsl(48,90%,78%)]" />
             
-            {/* Big happy eyes - blink occasionally */}
+            {/* Eyes - calm and friendly */}
             <g className={speaking ? "animate-eyes-excited" : "animate-eyes-blink"}>
               {/* Eye whites */}
-              <ellipse cx="52" cy="46" rx="6" ry="7" className="fill-card" />
-              <ellipse cx="68" cy="46" rx="6" ry="7" className="fill-card" />
-              {/* Pupils - look around */}
+              <ellipse cx="52" cy="48" rx="5" ry="5" className="fill-card" />
+              <ellipse cx="68" cy="48" rx="5" ry="5" className="fill-card" />
+              {/* Pupils */}
               <g className="animate-pupils-look">
-                <circle cx="53" cy="47" r="4" className="fill-foreground" />
-                <circle cx="69" cy="47" r="4" className="fill-foreground" />
+                <circle cx="52" cy="48" r="3" className="fill-foreground" />
+                <circle cx="68" cy="48" r="3" className="fill-foreground" />
               </g>
               {/* Eye sparkles */}
-              <circle cx="54.5" cy="45" r="1.5" className="fill-card" />
-              <circle cx="70.5" cy="45" r="1.5" className="fill-card" />
+              <circle cx="53" cy="47" r="1" className="fill-card" />
+              <circle cx="69" cy="47" r="1" className="fill-card" />
             </g>
             
-            {/* Mouth - happy smile */}
+            {/* Mouth - gentle smile */}
             <path 
-              d="M48 58 Q60 68 72 58"
+              d="M52 56 Q60 62 68 56"
               className="stroke-foreground fill-none"
-              strokeWidth="3"
+              strokeWidth="2.5"
               strokeLinecap="round"
             />
           </g>
