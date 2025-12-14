@@ -61,11 +61,23 @@ function parseProfileFromMessage(message: string, currentProfile: Partial<Parent
   return updated;
 }
 
+// Build profile context string for AI
+function buildProfileContext(profile: Partial<ParentProfile>): string {
+  const parts: string[] = [];
+  if (profile.numberOfChildren) parts.push(`Children: ${profile.numberOfChildren}`);
+  if (profile.childrenAges?.length) parts.push(`Ages: ${Array.isArray(profile.childrenAges) ? profile.childrenAges.join(', ') : profile.childrenAges}`);
+  if (profile.housingType) parts.push(`Housing: ${profile.housingType}`);
+  if (profile.monthlyIncome) parts.push(`Monthly income: ~€${profile.monthlyIncome}`);
+  if (profile.employmentStatus) parts.push(`Employment: ${profile.employmentStatus}`);
+  if (profile.challenges) parts.push(`Main challenge: ${profile.challenges}`);
+  return parts.length > 0 ? parts.join('\n') : 'No information gathered yet.';
+}
+
 // Call AI API for response
-async function callAI(messages: { role: string; content: string }[], isDocument = false): Promise<string> {
+async function callAI(messages: { role: string; content: string }[], isDocument = false, profileContext?: string): Promise<string> {
   try {
     const { data, error } = await supabase.functions.invoke('greenpt-chat', {
-      body: { messages, isDocument }
+      body: { messages, isDocument, profileContext }
     });
 
     if (error) {
@@ -287,14 +299,17 @@ export function useChat() {
     const newHistory = [...conversationHistory, { role: 'user', content }];
     setConversationHistory(newHistory);
 
-    // Parse profile from user message
+    // Parse profile from user message BEFORE calling AI
     const updatedProfile = parseProfileFromMessage(content, profile);
     const answeredCount = countAnsweredQuestions(updatedProfile);
     const stage = getStage(updatedProfile);
     const shouldMatch = stage === 'ready' && answeredCount >= 5;
 
-    // Call real AI for response
-    const aiResponse = await callAI(newHistory);
+    // Build context for AI about what we know so far
+    const profileContext = buildProfileContext(updatedProfile);
+
+    // Call real AI for response with profile context
+    const aiResponse = await callAI(newHistory, false, profileContext);
     
     // Simulate natural typing delay
     await new Promise(resolve => setTimeout(resolve, getTypingDelay(aiResponse || 'Thinking...')));
@@ -313,8 +328,9 @@ export function useChat() {
     setMessages(prev => [...prev, assistantMessage]);
     setConversationHistory(prev => [...prev, { role: 'assistant', content: finalResponse }]);
 
-    // Generate quick replies based on stage
-    const quickRepliesForStage = getQuickRepliesForStage(stage, updatedProfile);
+    // Generate quick replies based on NEXT stage (what we're asking about)
+    const nextStage = getStage(updatedProfile);
+    const quickRepliesForStage = getQuickRepliesForStage(nextStage);
     setQuickReplies(quickRepliesForStage);
 
     // If ready to match, call the benefits matching API
@@ -346,9 +362,9 @@ export function useChat() {
   }, [profile, conversationHistory]);
 
   // Helper to get quick replies based on conversation stage
-  function getQuickRepliesForStage(stage: Stage, profile: Partial<ParentProfile>): string[] {
+  function getQuickRepliesForStage(stage: Stage): string[] {
     switch (stage) {
-      case 'greeting': return ['Yes, I have children', 'No children'];
+      case 'greeting': return ['Yes, I have children', '1 child', '2 children', '3 or more'];
       case 'children': return ['Baby/toddler (0-4)', 'School age (4-12)', 'Teenager (12-18)', 'Mixed ages'];
       case 'ages': return ['Renting privately', 'Social housing', 'Own home', 'Living with family'];
       case 'housing': return ['Under €1,500', '€1,500-2,500', '€2,500-3,500', 'Above €3,500'];
