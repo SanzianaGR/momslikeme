@@ -72,7 +72,7 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
           
           {/* Flower head - bobs */}
           <g className="animate-head-bob" style={{ transformOrigin: '60px 50px' }}>
-            {/* Outer petals - warm peachy pink */}
+            {/* Outer petals - neutral sage/olive tones */}
             <g className="animate-petals-breathe" style={{ transformOrigin: '60px 50px' }}>
               {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
                 <ellipse
@@ -81,14 +81,14 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
                   cy="20"
                   rx="18"
                   ry="28"
-                  className="fill-[hsl(350,75%,82%)]"
+                  className="fill-[hsl(140,25%,65%)]"
                   transform={`rotate(${angle} 60 50)`}
-                  style={{ opacity: 0.9 - i * 0.02 }}
+                  style={{ opacity: 0.85 - i * 0.02 }}
                 />
               ))}
             </g>
 
-            {/* Inner petals - warmer orange-ish */}
+            {/* Inner petals - muted green */}
             <g>
               {[0, 60, 120, 180, 240, 300].map((angle, i) => (
                 <ellipse
@@ -97,19 +97,15 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
                   cy="30"
                   rx="12"
                   ry="20"
-                  className="fill-[hsl(30,80%,78%)]"
+                  className="fill-[hsl(145,30%,55%)]"
                   transform={`rotate(${angle} 60 50)`}
                 />
               ))}
             </g>
 
-            {/* Face center - sunny yellow */}
-            <circle cx="60" cy="50" r="24" className="fill-[hsl(45,95%,65%)]" />
-            <circle cx="60" cy="50" r="20" className="fill-[hsl(48,100%,72%)]" />
-            
-            {/* Rosy cheeks */}
-            <circle cx="46" cy="54" r="6" className="fill-[hsl(350,70%,82%)] animate-cheek-blush" opacity="0.7" />
-            <circle cx="74" cy="54" r="6" className="fill-[hsl(350,70%,82%)] animate-cheek-blush" opacity="0.7" style={{ animationDelay: '0.3s' }} />
+            {/* Face center - warm neutral beige */}
+            <circle cx="60" cy="50" r="24" className="fill-[hsl(35,40%,75%)]" />
+            <circle cx="60" cy="50" r="20" className="fill-[hsl(38,45%,82%)]" />
             
             {/* Big happy eyes - blink occasionally */}
             <g className={speaking ? "animate-eyes-excited" : "animate-eyes-blink"}>
