@@ -3,14 +3,15 @@ export interface ParentProfile {
   name?: string;
   municipality?: string;
   numberOfChildren: number;
-  childrenAges: number[];
-  monthlyIncome?: number;
-  housingType?: 'rent' | 'own' | 'social';
-  employmentStatus?: 'employed' | 'part-time' | 'unemployed' | 'self-employed' | 'student';
+  childrenAges: number[] | string;
+  monthlyIncome?: number | string;
+  housingType?: 'rent' | 'own' | 'social' | 'family';
+  employmentStatus?: 'employed' | 'part-time' | 'unemployed' | 'self-employed' | 'student' | 'studying' | 'unable';
   hasChildcareNeeds: boolean;
   healthInsurance: boolean;
   receivingBenefits: string[];
   concerns: string[];
+  challenges?: string;
   rawConversation: string;
 }
 

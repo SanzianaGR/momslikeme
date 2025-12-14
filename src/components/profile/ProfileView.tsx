@@ -23,8 +23,10 @@ export function ProfileView({ profile }: ProfileViewProps) {
     {
       icon: Users,
       label: 'Ages',
-      value: profile.childrenAges?.length
-        ? profile.childrenAges.map(a => `${a} years`).join(', ')
+      value: profile.childrenAges
+        ? (typeof profile.childrenAges === 'string' 
+            ? profile.childrenAges 
+            : profile.childrenAges.map(a => `${a} years`).join(', '))
         : undefined,
       color: 'text-primary',
     },

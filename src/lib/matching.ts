@@ -26,8 +26,10 @@ const matchingSignals: MatchingSignal[] = [
     weight: 0.25,
     applies: (profile) => {
       if (!profile.monthlyIncome) return false;
-      // Below 150% of social minimum (roughly €2,300 for single parent)
-      return profile.monthlyIncome < 2300;
+      const income = typeof profile.monthlyIncome === 'string' 
+        ? (profile.monthlyIncome === 'low' ? 1000 : profile.monthlyIncome === 'medium' ? 2000 : 4000)
+        : profile.monthlyIncome;
+      return income < 2300;
     },
     reason: 'Based on your income level'
   },
@@ -78,7 +80,11 @@ const matchingSignals: MatchingSignal[] = [
     signal: 'young_children',
     weight: 0.1,
     applies: (profile) => {
-      const ages = profile.childrenAges ?? [];
+      const ages = profile.childrenAges;
+      if (!ages) return false;
+      if (typeof ages === 'string') {
+        return ages === 'young' || ages === 'mixed';
+      }
       return ages.some(age => age < 13);
     },
     reason: 'You have young children'
@@ -87,8 +93,14 @@ const matchingSignals: MatchingSignal[] = [
     signal: 'school_age',
     weight: 0.1,
     applies: (profile, benefit) => {
-      const ages = profile.childrenAges ?? [];
-      const hasSchoolAge = ages.some(age => age >= 4 && age <= 18);
+      const ages = profile.childrenAges;
+      if (!ages) return false;
+      let hasSchoolAge = false;
+      if (typeof ages === 'string') {
+        hasSchoolAge = ages === 'school' || ages === 'teen' || ages === 'mixed';
+      } else {
+        hasSchoolAge = ages.some(age => age >= 4 && age <= 18);
+      }
       return hasSchoolAge && ['stichting-leergeld', 'jeugdfonds', 'sam-kinderen'].includes(benefit.id);
     },
     reason: 'You have school-age children'
