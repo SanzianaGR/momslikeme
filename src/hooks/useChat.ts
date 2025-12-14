@@ -86,8 +86,19 @@ function parseProfileFromMessage(message: string, currentProfile: Partial<Parent
   return updated;
 }
 
-// Get conversation stage
+// Get conversation stage - we need at least 5 answered questions before matching
 type Stage = 'greeting' | 'children' | 'ages' | 'housing' | 'income' | 'employment' | 'challenges' | 'ready';
+
+function countAnsweredQuestions(profile: Partial<ParentProfile>): number {
+  let count = 0;
+  if (profile.numberOfChildren) count++;
+  if (profile.childrenAges && profile.childrenAges.length > 0) count++;
+  if (profile.housingType) count++;
+  if (profile.monthlyIncome) count++;
+  if (profile.employmentStatus) count++;
+  if (profile.challenges) count++;
+  return count;
+}
 
 function getStage(profile: Partial<ParentProfile>): Stage {
   if (!profile.numberOfChildren) return 'greeting';
@@ -108,52 +119,69 @@ function generateLocalResponse(userMessage: string, profile: Partial<ParentProfi
 } {
   const updatedProfile = parseProfileFromMessage(userMessage, profile);
   const stage = getStage(updatedProfile);
+  const answeredCount = countAnsweredQuestions(updatedProfile);
   const lower = userMessage.toLowerCase();
 
   let response = '';
   let quickReplies: string[] = [];
-  let shouldMatch = false;
+  // Only match when we have at least 5 questions answered AND reached 'ready' stage
+  let shouldMatch = stage === 'ready' && answeredCount >= 5;
 
   switch (stage) {
     case 'greeting':
-      if (lower.includes('yes') || lower.includes('child') || lower.includes('kinderen')) {
-        response = `How many children do you have?`;
+      if (lower.includes('yes') || lower.includes('child') || lower.includes('kinderen') || lower.includes('have children')) {
+        response = `That's wonderful. How many little ones do you have?`;
         quickReplies = ['1 child', '2 children', '3 or more'];
+      } else if (lower.includes('new') || lower.includes('nieuw')) {
+        response = `Welcome! I'm here to help you discover support you may be entitled to. Do you have any children?`;
+        quickReplies = ['Yes, I have children', 'No children'];
+      } else if (lower.includes('housing') || lower.includes('woon')) {
+        response = `I can help with housing support. But first, tell me - do you have any children?`;
+        quickReplies = ['Yes, I have children', 'No children'];
+      } else if (lower.includes('health') || lower.includes('gezond')) {
+        response = `Healthcare support is definitely something we can explore. To start, do you have any children?`;
+        quickReplies = ['Yes, I have children', 'No children'];
       } else {
-        response = `Hi! I'm Bloom. I help parents find support they're entitled to.\n\nDo you have children?`;
+        response = `Hi there! I'm Bloom, and I'm here to help you find support you deserve.\n\nDo you have any children?`;
         quickReplies = ['Yes, I have children', 'No children'];
       }
       break;
 
     case 'children':
-      response = `Got it! How old ${updatedProfile.numberOfChildren === 1 ? 'is your child' : 'are they'}?`;
+      response = `Got it, ${updatedProfile.numberOfChildren} ${updatedProfile.numberOfChildren === 1 ? 'child' : 'children'}! How old ${updatedProfile.numberOfChildren === 1 ? 'is your little one' : 'are they'}?`;
       quickReplies = ['Baby/toddler (0-4)', 'School age (4-12)', 'Teenager (12-18)', 'Mixed ages'];
       break;
 
     case 'ages':
-      response = `Thanks! Are you renting or do you own your home?`;
+      response = `Thanks for sharing! Now, what's your housing situation?`;
       quickReplies = ['Renting privately', 'Social housing', 'Own home', 'Living with family'];
       break;
 
     case 'housing':
-      response = `What's your approximate household income per month?`;
+      response = `Understood. And roughly, what's your monthly household income?`;
       quickReplies = ['Under €1,500', '€1,500-2,500', '€2,500-3,500', 'Above €3,500'];
       break;
 
     case 'income':
-      response = `Are you currently working?`;
+      response = `Almost there! What's your current work situation?`;
       quickReplies = ['Full-time', 'Part-time', 'Looking for work', 'Studying', 'Unable to work'];
       break;
 
     case 'employment':
-      response = `Last question: what's your biggest challenge right now?`;
-      quickReplies = ['Childcare costs', 'Healthcare', 'Making ends meet', 'Everything feels hard'];
+      response = `Last question: what feels like your biggest challenge right now?`;
+      quickReplies = ['Childcare costs', 'Healthcare expenses', 'Making ends meet', 'Everything feels overwhelming'];
       break;
 
     case 'ready':
-      response = `Thanks for sharing. Let me find what you're entitled to...`;
-      quickReplies = [];
-      shouldMatch = true;
+      if (shouldMatch) {
+        response = `Thank you for trusting me with your story. Let me find what you're entitled to...`;
+        quickReplies = [];
+      } else {
+        // Not enough info yet, ask for more
+        response = `Thanks for sharing. Is there anything else that's been challenging?`;
+        quickReplies = ['Childcare costs', 'Healthcare', 'Bills and expenses', 'That covers it'];
+        shouldMatch = lower.includes('covers it') || lower.includes('that\'s all');
+      }
       break;
   }
 
@@ -398,6 +426,16 @@ export function useChat() {
     setTasks(prev => prev.filter(t => t.id !== taskId));
   }, []);
 
+  const resetConversation = useCallback(() => {
+    setMessages([]);
+    setProfile({});
+    setBenefitMatches([]);
+    setQuickReplies([]);
+    setConversationHistory([]);
+    setIsLoading(false);
+    setIsTyping(false);
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -411,5 +449,6 @@ export function useChat() {
     addTaskForBenefit,
     toggleTask,
     deleteTask,
+    resetConversation,
   };
 }
