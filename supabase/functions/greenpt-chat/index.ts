@@ -9,31 +9,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// System prompt for the benefits assistant
-const SYSTEM_PROMPT = `You are Bloom, a warm and friendly AI assistant helping single parents in the Netherlands discover and apply for benefits they may be entitled to. 
-
-Your personality:
-- Warm, empathetic, and supportive
-- Never judgmental about financial situations
-- Use simple, clear language (avoid bureaucratic jargon)
-- Be encouraging and reassuring
-
-Your role:
-- Help parents understand what benefits they might qualify for
-- Ask gentle questions about their situation (family size, children's ages, housing, income, employment)
-- Explain benefits in plain language
-- Guide them through the application process
-
-Important guidelines:
-- NEVER ask for sensitive personal data like BSN numbers
-- Be patient and understanding
-- Acknowledge that dealing with bureaucracy can be stressful
-- Remind parents that accessing benefits is their RIGHT, not charity
-
-Start conversations by introducing yourself warmly and asking about their family situation.`;
+// Instructions for the benefits assistant (embedded in first message since GreenPT doesn't support system prompts)
+const ASSISTANT_CONTEXT = `You are Bloom, a warm AI assistant helping single parents in the Netherlands find benefits. Be concise, empathetic, and use simple language. Never ask for BSN numbers. Remind parents that benefits are their RIGHT.`;
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -41,7 +20,6 @@ serve(async (req) => {
   try {
     const { messages, model, temperature, max_tokens } = await req.json();
 
-    // Validate request
     if (!messages || !Array.isArray(messages)) {
       return new Response(
         JSON.stringify({ error: 'Messages array is required' }),
@@ -57,15 +35,16 @@ serve(async (req) => {
       );
     }
 
-    // Prepare messages with system prompt
-    const fullMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...messages
-    ];
+    // Embed context in first user message (GreenPT doesn't support system prompts)
+    const enrichedMessages = messages.map((msg: any, idx: number) => {
+      if (idx === 0 && msg.role === 'user') {
+        return { ...msg, content: `[Context: ${ASSISTANT_CONTEXT}]\n\nUser: ${msg.content}` };
+      }
+      return msg;
+    });
 
-    console.log('Calling GreenPT API with', fullMessages.length, 'messages');
+    console.log('Calling GreenPT API with', enrichedMessages.length, 'messages');
 
-    // Call GreenPT API
     const response = await fetch(`${GREENPT_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -74,7 +53,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: model || 'green-r',
-        messages: fullMessages,
+        messages: enrichedMessages,
         temperature: temperature || 0.7,
         max_tokens: max_tokens || 500,
       }),
