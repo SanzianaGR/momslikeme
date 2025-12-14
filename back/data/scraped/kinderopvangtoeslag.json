@@ -1,0 +1,27 @@
+{
+  "id": "kinderopvangtoeslag",
+  "name": "Kinderopvangtoeslag",
+  "name_en": "Childcare Allowance",
+  "provider": "Dienst Toeslagen (Belastingdienst)",
+  "type": "national",
+  "municipality": null,
+  "category": "child",
+  "description": "Financial support from the Dutch government to help parents pay for registered childcare.",
+  "eligibility_rules": {
+    "max_income": null,
+    "max_income_percent_of_minimum": null,
+    "min_age": null,
+    "max_age": null,
+    "requires_children": true,
+    "child_age_range": null,
+    "requires_dutch_residence": true,
+    "max_assets": null,
+    "other": [
+      "You must have a contract with a registered childcare organization.",
+      "You or your partner must be working, studying, following a reintegration program, or taking an integration course."
+    ]
+  },
+  "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/kinderopvangtoeslag/kinderopvangtoeslag",
+  "confidence": "high",
+  "scraped_at": "2025-12-13T12:00:03.137Z"
+}

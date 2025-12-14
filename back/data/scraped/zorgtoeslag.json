@@ -1,0 +1,27 @@
+{
+  "id": "zorgtoeslag",
+  "name": "Zorgtoeslag",
+  "name_en": "Healthcare allowance",
+  "provider": "Dienst Toeslagen (Belastingdienst)",
+  "type": "national",
+  "municipality": null,
+  "category": "health",
+  "description": "A benefit to help cover the costs of health insurance.",
+  "eligibility_rules": {
+    "max_income": null,
+    "max_income_percent_of_minimum": null,
+    "min_age": null,
+    "max_age": null,
+    "requires_children": false,
+    "child_age_range": null,
+    "requires_dutch_residence": true,
+    "max_assets": null,
+    "other": [
+      "Must have Dutch health insurance.",
+      "Income and assets must be below certain thresholds."
+    ]
+  },
+  "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/zorgtoeslag/zorgtoeslag",
+  "confidence": "high",
+  "scraped_at": "2025-12-13T11:59:54.554Z"
+}

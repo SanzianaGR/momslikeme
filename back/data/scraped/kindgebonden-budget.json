@@ -1,0 +1,28 @@
+{
+  "id": "kindgebonden-budget",
+  "name": "Kindgebonden budget",
+  "name_en": "Child-related budget",
+  "provider": "Dienst Toeslagen (Belastingdienst)",
+  "type": "national",
+  "municipality": null,
+  "category": "child",
+  "description": "A benefit provided by the Dutch government to help parents with the costs of raising children.",
+  "eligibility_rules": {
+    "max_income": null,
+    "max_income_percent_of_minimum": null,
+    "min_age": null,
+    "max_age": null,
+    "requires_children": true,
+    "child_age_range": null,
+    "requires_dutch_residence": null,
+    "max_assets": null,
+    "other": [
+      "Requires having children.",
+      "Income limits apply, but the specific amounts are not directly stated on this page.",
+      "Asset limits apply, but the specific amounts are not directly stated on this page."
+    ]
+  },
+  "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/kindgebonden-budget/kindgebonden-budget",
+  "confidence": "medium",
+  "scraped_at": "2025-12-13T11:59:50.856Z"
+}

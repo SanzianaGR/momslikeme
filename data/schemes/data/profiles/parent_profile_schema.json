@@ -1,0 +1,82 @@
+{
+  "profile_type": "parent_or_caregiver",
+  "version": "1.0",
+  "description": "Information collected once to recommend national, municipal and private support schemes.",
+  "fields": [
+    {
+      "id": "municipality",
+      "label": "City or municipality",
+      "type": "string",
+      "required": true
+    },
+    {
+      "id": "household_type",
+      "label": "Household situation",
+      "type": "enum",
+      "options": ["single_parent", "two_parents", "other"],
+      "required": true
+    },
+    {
+      "id": "number_of_children",
+      "label": "Number of children under 18",
+      "type": "number",
+      "required": true
+    },
+    {
+      "id": "children_ages",
+      "label": "Ages of children",
+      "type": "array",
+      "required": false
+    },
+    {
+      "id": "household_income_range",
+      "label": "Approximate household income",
+      "type": "enum",
+      "options": [
+        "no_income",
+        "below_social_minimum",
+        "around_social_minimum",
+        "slightly_above_social_minimum",
+        "unknown"
+      ],
+      "required": true
+    },
+    {
+      "id": "savings_range",
+      "label": "Approximate savings",
+      "type": "enum",
+      "options": [
+        "no_savings",
+        "low_savings",
+        "moderate_savings",
+        "unknown"
+      ],
+      "required": false
+    },
+    {
+      "id": "renting_home",
+      "label": "Do you rent your home?",
+      "type": "boolean",
+      "required": false
+    },
+    {
+      "id": "uses_childcare",
+      "label": "Do you use registered childcare?",
+      "type": "boolean",
+      "required": false
+    },
+    {
+      "id": "has_health_insurance",
+      "label": "Do you have Dutch health insurance?",
+      "type": "boolean",
+      "required": false
+    },
+    {
+      "id": "urgent_costs",
+      "label": "Do you currently have urgent or unexpected costs?",
+      "type": "boolean",
+      "required": false
+    }
+  ],
+  "privacy_note": "Answers are used only to suggest possible support options. Nothing is saved or shared without explicit permission."
+}

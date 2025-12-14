@@ -1,0 +1,26 @@
+{
+  "id": "kinderbijslag",
+  "name": "Kinderbijslag",
+  "name_en": "Child Benefit",
+  "provider": "SVB",
+  "type": "national",
+  "municipality": null,
+  "category": "child",
+  "description": "Financial support for parents to help with the costs of raising children.",
+  "eligibility_rules": {
+    "max_income": null,
+    "max_income_percent_of_minimum": null,
+    "min_age": null,
+    "max_age": null,
+    "requires_children": true,
+    "child_age_range": null,
+    "requires_dutch_residence": true,
+    "max_assets": null,
+    "other": [
+      "Available to parents who work in the Netherlands, including Ukrainian refugees."
+    ]
+  },
+  "url": "https://www.svb.nl/nl/kinderbijslag",
+  "confidence": "high",
+  "scraped_at": "2025-12-13T11:59:46.963Z"
+}

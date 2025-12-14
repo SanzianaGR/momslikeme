@@ -1,0 +1,29 @@
+{
+  "id": "huurtoeslag",
+  "name": "Huurtoeslag",
+  "name_en": "Rent allowance",
+  "provider": "Dienst Toeslagen (Belastingdienst)",
+  "type": "national",
+  "municipality": null,
+  "category": "housing",
+  "description": "Financial support for rent costs",
+  "eligibility_rules": {
+    "max_income": null,
+    "max_income_percent_of_minimum": null,
+    "min_age": null,
+    "max_age": null,
+    "requires_children": false,
+    "child_age_range": null,
+    "requires_dutch_residence": true,
+    "max_assets": null,
+    "other": [
+      "Must rent a qualifying property",
+      "Rent must be above a minimum threshold",
+      "Income and assets are tested, but specific limits are not provided here",
+      "Household composition affects eligibility"
+    ]
+  },
+  "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/huurtoeslag/huurtoeslag",
+  "confidence": "medium",
+  "scraped_at": "2025-12-13T11:59:58.998Z"
+}

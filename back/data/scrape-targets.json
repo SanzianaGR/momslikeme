@@ -1,0 +1,51 @@
+[
+  {
+    "id": "kinderbijslag",
+    "url": "https://www.svb.nl/nl/kinderbijslag",
+    "provider": "SVB",
+    "type": "national"
+  },
+  {
+    "id": "kindgebonden-budget",
+    "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/kindgebonden-budget/kindgebonden-budget",
+    "provider": "Belastingdienst",
+    "type": "national"
+  },
+  {
+    "id": "zorgtoeslag",
+    "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/zorgtoeslag/zorgtoeslag",
+    "provider": "Belastingdienst",
+    "type": "national"
+  },
+  {
+    "id": "huurtoeslag",
+    "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/huurtoeslag/huurtoeslag",
+    "provider": "Belastingdienst",
+    "type": "national"
+  },
+  {
+    "id": "kinderopvangtoeslag",
+    "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/kinderopvangtoeslag/kinderopvangtoeslag",
+    "provider": "Belastingdienst",
+    "type": "national"
+  },
+  {
+    "id": "alo-kop",
+    "url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/kindgebonden-budget/kindgebonden-budget",
+    "provider": "Belastingdienst",
+    "type": "national"
+  },
+  {
+    "id": "stichting-leergeld",
+    "url": "https://www.leergeld.nl/wat-doet-leergeld/",
+    "provider": "Stichting Leergeld",
+    "type": "private"
+  },
+  {
+    "id": "amsterdam-stadspas",
+    "url": "https://www.amsterdam.nl/stadspas/",
+    "provider": "Gemeente Amsterdam",
+    "type": "municipal",
+    "municipality": "Amsterdam"
+  }
+]

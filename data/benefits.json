@@ -1,0 +1,1116 @@
+[
+  {
+    "benefitId": "kinderbijslag",
+    "content_mismatch": false,
+    "info": {
+      "name": "Kinderbijslag",
+      "provider": "SVB",
+      "type": "national",
+      "description": "Financial support for parents to help with the costs of raising children.",
+      "application_url": null,
+      "eligibility_summary": [
+        "You must have a child.",
+        "The child must be under 18 years old.",
+        "If you are a Ukrainian refugee working in the Netherlands, you may be eligible."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Apply online via Mijn SVB (requires DigiD).",
+        "Check the SVB website for specific instructions based on your situation (e.g., first application, changes in family situation)."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "children.numberOfChildren"
+              },
+              1
+            ]
+          },
+          {
+            "or": [
+              {
+                "<": [
+                  {
+                    "var": "children.age"
+                  },
+                  6
+                ]
+              },
+              {
+                "and": [
+                  {
+                    ">=": [
+                      {
+                        "var": "children.age"
+                      },
+                      6
+                    ]
+                  },
+                  {
+                    "<": [
+                      {
+                        "var": "children.age"
+                      },
+                      12
+                    ]
+                  }
+                ]
+              },
+              {
+                "and": [
+                  {
+                    ">=": [
+                      {
+                        "var": "children.age"
+                      },
+                      12
+                    ]
+                  },
+                  {
+                    "<": [
+                      {
+                        "var": "children.age"
+                      },
+                      18
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "soft_rules": [],
+      "test_cases": {
+        "pass_1": {
+          "personal": {
+            "age": 35
+          },
+          "financial": {
+            "annualIncomeGross": 50000
+          },
+          "children": {
+            "numberOfChildren": 1,
+            "age": 5
+          }
+        },
+        "pass_2": {
+          "personal": {
+            "age": 40
+          },
+          "financial": {
+            "annualIncomeGross": 60000
+          },
+          "children": {
+            "numberOfChildren": 2,
+            "age": 10
+          }
+        },
+        "fail_1": {
+          "personal": {
+            "age": 25
+          },
+          "financial": {
+            "annualIncomeGross": 30000
+          },
+          "children": {
+            "numberOfChildren": 0,
+            "age": null
+          }
+        },
+        "fail_2": {
+          "personal": {
+            "age": 50
+          },
+          "financial": {
+            "annualIncomeGross": 70000
+          },
+          "children": {
+            "numberOfChildren": 1,
+            "age": 20
+          }
+        }
+      }
+    },
+    "source": {
+      "url": "https://www.svb.nl/nl/kinderbijslag",
+      "scraped_at": "2025-12-13T20:34:10.627Z"
+    },
+    "scrapedAt": "2025-12-13T20:34:10.630Z"
+  },
+  {
+    "benefitId": "kinderopvangtoeslag",
+    "content_mismatch": false,
+    "info": {
+      "name": "Kinderopvangtoeslag",
+      "provider": "Belastingdienst",
+      "type": "national",
+      "description": "A contribution towards the costs of registered childcare in the Netherlands.",
+      "application_url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/kinderopvangtoeslag/content/kan-ik-kinderopvangtoeslag-krijgen",
+      "eligibility_summary": [
+        "You and your partner work, study, follow an integration course, or participate in a work placement program.",
+        "The childcare facility must be registered in the Landelijk Register Kinderopvang (LRK).",
+        "You and your child must live at the same address and be registered there with the municipality.",
+        "You must pay a portion of the childcare costs yourself (own contribution).",
+        "You must pay the childcare costs within 6 months after the end of the year in which the costs were incurred."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Apply online via Mijn toeslagen as soon as you have signed the contract with the childcare provider.",
+        "Ensure your child is born and has a burgerservicenummer (BSN) before applying.",
+        "Apply within 3 months of the start of childcare to avoid missing out on benefits."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            "or": [
+              {
+                "!=": [
+                  {
+                    "var": "employment.isEmployed"
+                  },
+                  null
+                ]
+              },
+              {
+                "!=": [
+                  {
+                    "var": "education.isEnrolled"
+                  },
+                  null
+                ]
+              },
+              {
+                "!=": [
+                  {
+                    "var": "integrationCourse.isAttending"
+                  },
+                  null
+                ]
+              },
+              {
+                "!=": [
+                  {
+                    "var": "workPlacement.isParticipating"
+                  },
+                  null
+                ]
+              }
+            ]
+          },
+          {
+            "!=": [
+              {
+                "var": "childcare.isRegistered"
+              },
+              null
+            ]
+          },
+          {
+            "!=": [
+              {
+                "var": "family.sameAddress"
+              },
+              null
+            ]
+          },
+          {
+            ">": [
+              {
+                "var": "financial.ownContribution"
+              },
+              0
+            ]
+          }
+        ]
+      },
+      "soft_rules": [],
+      "test_cases": {
+        "pass": [
+          {
+            "description": "Employed, registered childcare, same address, own contribution",
+            "profile": {
+              "employment": {
+                "isEmployed": true
+              },
+              "education": {
+                "isEnrolled": false
+              },
+              "integrationCourse": {
+                "isAttending": false
+              },
+              "workPlacement": {
+                "isParticipating": false
+              },
+              "childcare": {
+                "isRegistered": true
+              },
+              "family": {
+                "sameAddress": true
+              },
+              "financial": {
+                "ownContribution": 100
+              }
+            },
+            "expected_result": true
+          },
+          {
+            "description": "Student, registered childcare, same address, own contribution",
+            "profile": {
+              "employment": {
+                "isEmployed": false
+              },
+              "education": {
+                "isEnrolled": true
+              },
+              "integrationCourse": {
+                "isAttending": false
+              },
+              "workPlacement": {
+                "isParticipating": false
+              },
+              "childcare": {
+                "isRegistered": true
+              },
+              "family": {
+                "sameAddress": true
+              },
+              "financial": {
+                "ownContribution": 50
+              }
+            },
+            "expected_result": true
+          }
+        ],
+        "fail": [
+          {
+            "description": "Not employed, no study, no integration course, no work placement, registered childcare, same address, own contribution",
+            "profile": {
+              "employment": {
+                "isEmployed": false
+              },
+              "education": {
+                "isEnrolled": false
+              },
+              "integrationCourse": {
+                "isAttending": false
+              },
+              "workPlacement": {
+                "isParticipating": false
+              },
+              "childcare": {
+                "isRegistered": true
+              },
+              "family": {
+                "sameAddress": true
+              },
+              "financial": {
+                "ownContribution": 100
+              }
+            },
+            "expected_result": false
+          },
+          {
+            "description": "Employed, unregistered childcare, same address, own contribution",
+            "profile": {
+              "employment": {
+                "isEmployed": true
+              },
+              "education": {
+                "isEnrolled": false
+              },
+              "integrationCourse": {
+                "isAttending": false
+              },
+              "workPlacement": {
+                "isParticipating": false
+              },
+              "childcare": {
+                "isRegistered": false
+              },
+              "family": {
+                "sameAddress": true
+              },
+              "financial": {
+                "ownContribution": 100
+              }
+            },
+            "expected_result": false
+          }
+        ]
+      }
+    },
+    "source": {
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/toeslagen/kinderopvangtoeslag/",
+      "scraped_at": "2025-12-13T20:35:04.166Z"
+    },
+    "_logicVerificationFailed": true,
+    "scrapedAt": "2025-12-13T20:35:04.166Z"
+  },
+  {
+    "benefitId": "zorgtoeslag",
+    "content_mismatch": false,
+    "info": {
+      "name": "Zorgtoeslag",
+      "provider": "Belastingdienst",
+      "type": "national",
+      "description": "A contribution from the government to help make health insurance affordable.",
+      "application_url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/zorgtoeslag/content/zorgtoeslag-aanvragen",
+      "eligibility_summary": [
+        "You must have a Dutch health insurance.",
+        "Your annual income must not exceed €40,857 if you don't have a partner (in 2026).",
+        "Your combined annual income with a partner must not exceed €51,142 (in 2026).",
+        "Your assets must not exceed €146,011 if you don't have a partner (in 2026).",
+        "Your combined assets with a partner must not exceed €184,633 (in 2026).",
+        "You must be 18 years or older."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Log in to Mijn toeslagen using your DigiD.",
+        "Apply for zorgtoeslag or change your details.",
+        "Provide the required information, including your income.",
+        "Submit your application."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "personal.age"
+              },
+              18
+            ]
+          },
+          {
+            "or": [
+              {
+                "and": [
+                  {
+                    "==": [
+                      {
+                        "var": "financial.hasPartner"
+                      },
+                      false
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "financial.annualIncomeGross"
+                      },
+                      40857
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "financial.assets"
+                      },
+                      146011
+                    ]
+                  }
+                ]
+              },
+              {
+                "and": [
+                  {
+                    "==": [
+                      {
+                        "var": "financial.hasPartner"
+                      },
+                      true
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "financial.annualIncomeGross"
+                      },
+                      51142
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "financial.assets"
+                      },
+                      184633
+                    ]
+                  }
+                ]
+              },
+              {
+                "and": [
+                  {
+                    "!=": [
+                      {
+                        "var": "financial.hasPartner"
+                      },
+                      true
+                    ]
+                  },
+                  {
+                    "!=": [
+                      {
+                        "var": "financial.hasPartner"
+                      },
+                      false
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "financial.annualIncomeGross"
+                      },
+                      40857
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "financial.assets"
+                      },
+                      146011
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "soft_rules": [],
+      "test_cases": {
+        "pass_1": {
+          "description": "Single, 25 years old, income €30,000, assets €100,000",
+          "profile": {
+            "personal": {
+              "age": 25
+            },
+            "financial": {
+              "annualIncomeGross": 30000,
+              "hasPartner": false,
+              "assets": 100000
+            }
+          },
+          "expected_result": true
+        },
+        "pass_2": {
+          "description": "Couple, both 30 years old, combined income €45,000, combined assets €150,000",
+          "profile": {
+            "personal": {
+              "age": 30
+            },
+            "financial": {
+              "annualIncomeGross": 45000,
+              "hasPartner": true,
+              "assets": 150000
+            }
+          },
+          "expected_result": true
+        },
+        "fail_1": {
+          "description": "Single, 20 years old, income €50,000, assets €100,000",
+          "profile": {
+            "personal": {
+              "age": 20
+            },
+            "financial": {
+              "annualIncomeGross": 50000,
+              "hasPartner": false,
+              "assets": 100000
+            }
+          },
+          "expected_result": false
+        },
+        "fail_2": {
+          "description": "Couple, both 40 years old, combined income €60,000, combined assets €150,000",
+          "profile": {
+            "personal": {
+              "age": 40
+            },
+            "financial": {
+              "annualIncomeGross": 60000,
+              "hasPartner": true,
+              "assets": 150000
+            }
+          },
+          "expected_result": false
+        }
+      }
+    },
+    "source": {
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/toeslagen/zorgtoeslag/",
+      "scraped_at": "2025-12-13T20:35:29.348Z"
+    },
+    "scrapedAt": "2025-12-13T20:35:29.348Z"
+  },
+  {
+    "benefitId": "huurtoeslag",
+    "content_mismatch": false,
+    "info": {
+      "name": "Huurtoeslag",
+      "provider": "Belastingdienst",
+      "type": "national",
+      "description": "Huurtoeslag is a contribution to help pay the rent of your home.",
+      "application_url": "https://www.belastingdienst.nl/wps/wcm/connect/nl/huurtoeslag/content/huurtoeslag-aanvragen",
+      "eligibility_summary": [
+        "You must rent a self-contained living space with a private entrance, kitchen, and toilet.",
+        "Since March 1, 2024, the dwelling must also have its own shower or bathroom.",
+        "Your income must not be too high; the exact limit depends on your rent, age, and household composition.",
+        "Your assets (e.g., savings) must not exceed €38,479 on January 1, 2026 (€76,958 for partners).",
+        "The income of any 'toeslagpartner' or 'medebewoners' is also taken into account.",
+        "You can make a trial calculation to see if you are eligible."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Log in to Mijn toeslagen to apply or modify your information.",
+        "Make a trial calculation to estimate your eligibility.",
+        "Provide accurate information about your income and household situation.",
+        "Submit the application online."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "personal.age"
+              },
+              18
+            ]
+          },
+          {
+            "!=": [
+              {
+                "var": "financial.annualIncomeGross"
+              },
+              null
+            ]
+          }
+        ]
+      },
+      "soft_rules": [],
+      "test_cases": {
+        "pass_1": {
+          "personal": {
+            "age": 30
+          },
+          "financial": {
+            "annualIncomeGross": 25000
+          },
+          "children": {
+            "numberOfChildren": 0
+          }
+        },
+        "pass_2": {
+          "personal": {
+            "age": 65
+          },
+          "financial": {
+            "annualIncomeGross": 30000
+          },
+          "children": {
+            "numberOfChildren": 0
+          }
+        },
+        "fail_1": {
+          "personal": {
+            "age": 17
+          },
+          "financial": {
+            "annualIncomeGross": 20000
+          },
+          "children": {
+            "numberOfChildren": 0
+          }
+        },
+        "fail_2": {
+          "personal": {
+            "age": 40
+          },
+          "financial": {
+            "annualIncomeGross": null
+          },
+          "children": {
+            "numberOfChildren": 0
+          }
+        }
+      }
+    },
+    "source": {
+      "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/toeslagen/huurtoeslag/",
+      "scraped_at": "2025-12-13T20:35:38.580Z"
+    },
+    "scrapedAt": "2025-12-13T20:35:38.580Z"
+  },
+  {
+    "benefitId": "jeugdfonds-sport-cultuur",
+    "content_mismatch": false,
+    "info": {
+      "name": "Jeugdfonds Sport & Cultuur",
+      "provider": "Jeugdfonds Sport & Cultuur",
+      "type": "private",
+      "description": "The Jeugdfonds Sport & Cultuur pays for the club if there is not enough money for sports or cultural activities for children. They also help if equipment is needed, such as sportswear or dance shoes.",
+      "application_url": "kieseenclub.nl",
+      "eligibility_summary": [
+        "The benefit is for children who want to participate in sports or cultural activities.",
+        "The benefit is for families who do not have enough money to pay for these activities.",
+        "The fund can pay for the club membership and necessary equipment.",
+        "Applications can be submitted via kieseenclub.nl or with the help of a teacher or other financial advisor."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Step 1: Go to kieseenclub.nl and fill in the form.",
+        "Step 2: Alternatively, ask for help from a teacher or someone who helps with financial matters to submit an application.",
+        "Step 3: Contact the Jeugdfonds in your area if you have questions."
+      ]
+    },
+    "eligibility": {
+      "logic": null,
+      "soft_rules": [
+        "Families who do not have enough money for sports or cultural activities for their children."
+      ],
+      "test_cases": {
+        "pass_1": {
+          "personal": {
+            "age": 10
+          },
+          "financial": {
+            "annualIncomeGross": 20000
+          },
+          "children": {
+            "numberOfChildren": 1
+          }
+        },
+        "pass_2": {
+          "personal": {
+            "age": 8
+          },
+          "financial": {
+            "annualIncomeGross": 25000
+          },
+          "children": {
+            "numberOfChildren": 2
+          }
+        },
+        "fail_1": {
+          "personal": {
+            "age": 30
+          },
+          "financial": {
+            "annualIncomeGross": 60000
+          },
+          "children": {
+            "numberOfChildren": 0
+          }
+        },
+        "fail_2": {
+          "personal": {
+            "age": 12
+          },
+          "financial": {
+            "annualIncomeGross": 80000
+          },
+          "children": {
+            "numberOfChildren": 3
+          }
+        }
+      }
+    },
+    "scrapedAt": "2025-12-13T20:35:57.179Z"
+  },
+  {
+    "benefitId": "stichting-jarige-job",
+    "content_mismatch": false,
+    "info": {
+      "name": "JarigeJob.nl",
+      "provider": "Stichting Jarige Job",
+      "type": "private",
+      "description": "JarigeJob.nl has been providing party supplies since 2001 to help people celebrate their birthdays.",
+      "application_url": "https://www.jarigejob.nl",
+      "eligibility_summary": [
+        "This page describes the services of JarigeJob.nl, which provides party supplies.",
+        "Specific eligibility criteria are not mentioned on this page.",
+        "It can be inferred that the target audience is people who are about to have a birthday and want party supplies."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Visit JarigeJob.nl",
+        "Browse the available party supplies",
+        "Contact Stichting Jarige Job for more information on how to receive the supplies."
+      ]
+    },
+    "eligibility": {
+      "logic": {},
+      "soft_rules": [],
+      "test_cases": {
+        "pass_1": {
+          "personal.age": 10,
+          "financial.annualIncomeGross": 10000,
+          "children.numberOfChildren": 0
+        },
+        "pass_2": {
+          "personal.age": 30,
+          "financial.annualIncomeGross": 25000,
+          "children.numberOfChildren": 2
+        },
+        "fail_1": {
+          "personal.age": 10,
+          "financial.annualIncomeGross": 10000,
+          "children.numberOfChildren": 0
+        },
+        "fail_2": {
+          "personal.age": 30,
+          "financial.annualIncomeGross": 25000,
+          "children.numberOfChildren": 2
+        }
+      }
+    },
+    "source": {
+      "url": "https://www.jarigejob.nl/voor-wie/",
+      "scraped_at": "2025-12-13T20:36:05.039Z"
+    },
+    "scrapedAt": "2025-12-13T20:36:05.039Z"
+  },
+  {
+    "benefitId": "stichting-leergeld",
+    "content_mismatch": false,
+    "info": {
+      "name": "Stichting Leergeld",
+      "provider": "Stichting Leergeld",
+      "type": "private",
+      "description": "Provides support for children from families with limited financial resources, enabling them to participate in school and extracurricular activities.",
+      "application_url": null,
+      "eligibility_summary": [
+        "You must live in a municipality where Stichting Leergeld is active.",
+        "If Stichting Leergeld is not active in your municipality, you may be eligible for support from Sam& partners (Jeugdfonds Sport & Cultuur, Nationaal Fonds Kinderhulp or Stichting Jarige Job).",
+        "The application must be made to the local Leergeldstichting."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Enter the four digits of your postal code on the website.",
+        "Check if there is a Leergeldstichting in your municipality/town.",
+        "If there is a Leergeldstichting, submit your application to that stichting.",
+        "If there isn't a Leergeldstichting in your municipality, visit www.samenvoorallekinderen.nl to apply to Sam& partners."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            "!=": [
+              {
+                "var": "personal.address.postalCode"
+              },
+              null
+            ]
+          }
+        ]
+      },
+      "soft_rules": [],
+      "test_cases": {
+        "pass_1": {
+          "personal": {
+            "address": {
+              "postalCode": "1234AB"
+            }
+          },
+          "financial": {
+            "annualIncomeGross": 25000
+          },
+          "children": {
+            "numberOfChildren": 2
+          }
+        },
+        "pass_2": {
+          "personal": {
+            "address": {
+              "postalCode": "5678CD"
+            }
+          },
+          "financial": {
+            "annualIncomeGross": 30000
+          },
+          "children": {
+            "numberOfChildren": 1
+          }
+        },
+        "fail_1": {
+          "personal": {
+            "address": {
+              "postalCode": null
+            }
+          },
+          "financial": {
+            "annualIncomeGross": 25000
+          },
+          "children": {
+            "numberOfChildren": 2
+          }
+        },
+        "fail_2": {
+          "personal": {
+            "address": {
+              "postalCode": null
+            }
+          },
+          "financial": {
+            "annualIncomeGross": 30000
+          },
+          "children": {
+            "numberOfChildren": 1
+          }
+        }
+      }
+    },
+    "source": {
+      "url": "https://www.leergeld.nl/doe-een-aanvraag/",
+      "scraped_at": "2025-12-13T20:35:48.582Z"
+    },
+    "scrapedAt": "2025-12-13T20:35:48.582Z"
+  },
+  {
+    "benefitId": "nationaal-fonds-kinderhulp",
+    "content_mismatch": false,
+    "info": {
+      "name": "Nationaal Fonds Kinderhulp",
+      "provider": "Nationaal Fonds Kinderhulp",
+      "type": "private",
+      "description": "Kinderhulp helps children and young people from 0 to 21 years old who grow up in poverty in the Netherlands by making simple things possible that other organizations cannot help with. This is always done through social organizations.",
+      "application_url": null,
+      "eligibility_summary": [
+        "The target group is children and young people aged 0 to 21 years.",
+        "Applicants must be growing up in poverty in the Netherlands.",
+        "Applications must be submitted through a social organization (e.g., social worker, guardian, municipal district team, or youth care worker).",
+        "Kinderhulp provides assistance for needs that other organizations cannot fulfill."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "A social organization identifies a child in need.",
+        "The social organization submits an application to Kinderhulp on behalf of the child.",
+        "Kinderhulp assesses the application.",
+        "If approved, Kinderhulp provides assistance to the child through the social organization."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "personal.age"
+              },
+              0
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "personal.age"
+              },
+              21
+            ]
+          }
+        ]
+      },
+      "soft_rules": [
+        "Child/young person is growing up in poverty.",
+        "Application submitted via a recognized social organisation."
+      ],
+      "test_cases": {
+        "pass_1": {
+          "description": "Eligible: 10 year old",
+          "profile": {
+            "personal": {
+              "age": 10
+            },
+            "financial": {
+              "annualIncomeGross": 15000
+            },
+            "children": {
+              "numberOfChildren": 0
+            }
+          },
+          "expected_result": true
+        },
+        "pass_2": {
+          "description": "Eligible: 21 year old",
+          "profile": {
+            "personal": {
+              "age": 21
+            },
+            "financial": {
+              "annualIncomeGross": 18000
+            },
+            "children": {
+              "numberOfChildren": 0
+            }
+          },
+          "expected_result": true
+        },
+        "fail_1": {
+          "description": "Ineligible: 22 year old",
+          "profile": {
+            "personal": {
+              "age": 22
+            },
+            "financial": {
+              "annualIncomeGross": 20000
+            },
+            "children": {
+              "numberOfChildren": 0
+            }
+          },
+          "expected_result": false
+        },
+        "fail_2": {
+          "description": "Ineligible: -1 year old",
+          "profile": {
+            "personal": {
+              "age": -1
+            },
+            "financial": {
+              "annualIncomeGross": 50000
+            },
+            "children": {
+              "numberOfChildren": 2
+            }
+          },
+          "expected_result": false
+        }
+      }
+    },
+    "source": {
+      "url": "https://kinderhulp.nl/",
+      "scraped_at": "2025-12-13T20:36:18.813Z"
+    },
+    "scrapedAt": "2025-12-13T20:36:18.813Z"
+  },
+  {
+    "benefitId": "kindgebonden-budget",
+    "content_mismatch": false,
+    "info": {
+      "name": "Kindgebonden budget",
+      "provider": "Belastingdienst / Rijksoverheid",
+      "type": "national",
+      "description": "The kindgebonden budget is a benefit to help parents with the costs of children. It aims to increase opportunities for children and combat child poverty.",
+      "application_url": "https://www.toeslagen.nl/",
+      "eligibility_summary": [
+        "You must have children.",
+        "The amount of kindgebonden budget you receive depends on your income.",
+        "The amount also depends on the number of children you have.",
+        "For higher incomes (above €60,000), the kindgebonden budget will be reduced from 2027 onwards."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Check your eligibility and calculate the potential amount on toeslagen.nl.",
+        "Apply for the kindgebonden budget via toeslagen.nl."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            "!=": [
+              {
+                "var": "children.numberOfChildren"
+              },
+              null
+            ]
+          },
+          {
+            ">": [
+              {
+                "var": "children.numberOfChildren"
+              },
+              0
+            ]
+          }
+        ]
+      },
+      "soft_rules": [],
+      "test_cases": {
+        "pass": [
+          {
+            "description": "Single parent with one child and low income.",
+            "profile": {
+              "personal": {
+                "age": 35
+              },
+              "financial": {
+                "annualIncomeGross": 25000
+              },
+              "children": {
+                "numberOfChildren": 1
+              }
+            },
+            "expected_result": true
+          },
+          {
+            "description": "Married couple with two children and moderate income.",
+            "profile": {
+              "personal": {
+                "age": 40
+              },
+              "financial": {
+                "annualIncomeGross": 50000
+              },
+              "children": {
+                "numberOfChildren": 2
+              }
+            },
+            "expected_result": true
+          }
+        ],
+        "fail": [
+          {
+            "description": "Single individual with no children.",
+            "profile": {
+              "personal": {
+                "age": 30
+              },
+              "financial": {
+                "annualIncomeGross": 30000
+              },
+              "children": {
+                "numberOfChildren": 0
+              }
+            },
+            "expected_result": false
+          },
+          {
+            "description": "Married couple with high income and no children.",
+            "profile": {
+              "personal": {
+                "age": 45
+              },
+              "financial": {
+                "annualIncomeGross": 70000
+              },
+              "children": {
+                "numberOfChildren": 0
+              }
+            },
+            "expected_result": false
+          }
+        ]
+      }
+    },
+    "source": {
+      "url": "https://www.rijksoverheid.nl/onderwerpen/kindgebonden-budget",
+      "scraped_at": "2025-12-13T20:34:33.034Z"
+    },
+    "_logicVerificationFailed": true,
+    "scrapedAt": "2025-12-13T20:34:33.034Z"
+  }
+]

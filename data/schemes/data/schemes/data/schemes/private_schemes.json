@@ -1,0 +1,92 @@
+[
+  {
+    "id": "stichting_leergeld",
+    "name": "Stichting Leergeld",
+    "category": "private",
+    "administrator": "Stichting Leergeld Nederland (local Leergeld foundations)",
+    "official_website": "https://www.leergeld.nl/",
+    "short_description": "Helps children from low-income families with school, sports, culture and wellbeing costs (e.g., school supplies, laptop, bike, sports club).",
+    "eligibility_plain_language": "For families with limited income. You apply through the local Leergeld foundation in your municipality (postcode search).",
+    "required_documents": [
+      "Proof of identity (if requested by the local foundation)",
+      "Proof of address (postcode / municipality)",
+      "Proof of income / benefits (recent)",
+      "Details of the child(ren) (age/school if relevant)",
+      "Quote/invoice or description of what is needed (e.g., laptop, school items)"
+    ],
+    "how_to_apply": [
+      "Go to the Leergeld website and search by postcode for your local foundation",
+      "Start the application via the local foundation",
+      "Provide the requested proof documents"
+    ],
+    "notes": [
+      "Local offerings differ by municipality."
+    ]
+  },
+  {
+    "id": "nationaal_fonds_kinderhulp",
+    "name": "Nationaal Fonds Kinderhulp",
+    "category": "private",
+    "administrator": "Nationaal Fonds Kinderhulp",
+    "official_website": "https://kinderhulp.nl/",
+    "short_description": "Supports children and young people (0–21) growing up in poverty with practical help (e.g., clothing, school needs, activities).",
+    "eligibility_plain_language": "Parents cannot apply directly. A professional helper (e.g., social worker, municipal wijkteam, youth worker) submits the application for the child.",
+    "required_documents": [
+      "Contact details of a professional helper (social worker / wijkteam / youth care / debt counselor)",
+      "Basic family situation summary (income/stressors) prepared by the professional",
+      "Details of the child(ren) and what support is needed",
+      "Quote/invoice or cost estimate for the requested item/activity (if applicable)"
+    ],
+    "how_to_apply": [
+      "Contact a professional helper (wijkteam / social worker / debt counselor)",
+      "The professional registers and submits the request via Kinderhulp’s application process"
+    ],
+    "notes": [
+      "Important for trust: clearly explain that a helper is needed to apply."
+    ]
+  },
+  {
+    "id": "sun_urgente_noden",
+    "name": "SUN Nederland (Stichting Urgente Noden)",
+    "category": "private",
+    "administrator": "SUN Nederland (network of local emergency aid agencies)",
+    "official_website": "https://www.sunnederland.nl/",
+    "short_description": "Emergency financial support for urgent needs when other provisions are not available in time (donation or interest-free loan, via local SUN agencies).",
+    "eligibility_plain_language": "You cannot apply directly. A professional helper submits an urgent request to the local SUN agency for your municipality when no (timely) other solution exists.",
+    "required_documents": [
+      "Contact details of a professional helper (social worker / wijkteam / debt counselor)",
+      "Proof of urgent financial need (rent arrears, essential bills, emergency costs)",
+      "Proof that other options (e.g., municipal schemes) are not available / not fast enough",
+      "Bank statements / income overview (usually requested by the helper)"
+    ],
+    "how_to_apply": [
+      "Ask a professional helper in your municipality to contact the local SUN agency",
+      "The helper submits the urgent request with supporting documents"
+    ],
+    "notes": [
+      "SUN only processes requests through professionals; the website explains this clearly."
+    ]
+  },
+  {
+    "id": "noodfonds_energie",
+    "name": "Noodfonds Energie",
+    "category": "private",
+    "administrator": "Noodfonds Energie (national emergency fund for energy costs)",
+    "official_website": "https://www.noodfondsenergie.nl/",
+    "short_description": "Temporary support for households with high energy bills and lower incomes (when applications are open).",
+    "eligibility_plain_language": "Availability depends on whether the fund is open. If open, eligibility is based on household income and energy costs (rules shown on the website).",
+    "required_documents": [
+      "DigiD or identity verification method (if required during the application)",
+      "Recent energy bill / contract details",
+      "Household income information (recent payslips/benefits overview)",
+      "Bank account (IBAN)"
+    ],
+    "how_to_apply": [
+      "Check if the fund is currently open on the official website",
+      "Apply online via noodfondsenergie.nl and follow the steps shown there"
+    ],
+    "notes": [
+      "This fund may open/close depending on the period; always show 'check availability'."
+    ]
+  }
+]

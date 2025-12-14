@@ -1,0 +1,147 @@
+[
+  {
+    "id": "kinderbijslag",
+    "name": "Kinderbijslag",
+    "category": "national",
+    "administrator": "SVB",
+    "official_website": "https://www.svb.nl/nl/kinderbijslag",
+    "short_description": "Quarterly child benefit to help cover the costs of raising children.",
+    "eligibility_plain_language": "You can receive this if you have one or more children under 18 and you live or work in the Netherlands. Income does not matter.",
+    "required_documents": [
+      "Valid ID or residence permit",
+      "BSN (citizen service number) for parent and child (if available)",
+      "Proof the child lives with you (if requested)",
+      "Bank account (IBAN) for payment"
+    ],
+    "how_to_apply": [
+      "Check the SVB page for your situation",
+      "Apply via SVB (online or with assistance)",
+      "Provide documents if SVB requests them",
+      "SVB confirms and pays quarterly"
+    ],
+    "notes": [
+      "Many parents receive this automatically, but not always (e.g., moving to NL or new circumstances)."
+    ]
+  },
+  {
+    "id": "kindgebonden_budget",
+    "name": "Kindgebonden budget",
+    "category": "national",
+    "administrator": "Belastingdienst",
+    "official_website": "https://www.belastingdienst.nl/wps/wcm/connect/nl/toeslagen/kindgebonden-budget",
+    "short_description": "Extra monthly financial support for parents with children, depending on income.",
+    "eligibility_plain_language": "You may receive this if you have children under 18 and your household income is below a certain level. Single parents often receive a higher amount (ALO-kop).",
+    "required_documents": [
+      "DigiD (for online application)",
+      "Valid ID or residence permit",
+      "BSN for parent and child(ren)",
+      "Income information (current/expected yearly income)",
+      "Bank account (IBAN)"
+    ],
+    "how_to_apply": [
+      "Log in via Toeslagen (Belastingdienst) using DigiD",
+      "Apply and enter your situation (household, children, income)",
+      "Upload documents if requested",
+      "Keep income changes updated to avoid repayment"
+    ],
+    "notes": [
+      "If income changes during the year, update Toeslagen to reduce the risk of paying money back."
+    ]
+  },
+  {
+    "id": "kinderopvangtoeslag",
+    "name": "Kinderopvangtoeslag",
+    "category": "national",
+    "administrator": "Belastingdienst",
+    "official_website": "https://www.belastingdienst.nl/wps/wcm/connect/nl/toeslagen/kinderopvangtoeslag",
+    "short_description": "Contribution towards the cost of registered childcare.",
+    "eligibility_plain_language": "You may receive this if you use registered childcare and you work, study, or follow an approved reintegration program. The amount depends on income and childcare hours.",
+    "required_documents": [
+      "DigiD",
+      "Childcare contract",
+      "Childcare provider details (registered provider)",
+      "Number of childcare hours and hourly rate",
+      "Proof of work/study/reintegration program (if requested)",
+      "Income estimate for the year",
+      "Bank account (IBAN)"
+    ],
+    "how_to_apply": [
+      "Check that your childcare provider is registered",
+      "Apply via Toeslagen (Belastingdienst) with DigiD",
+      "Enter childcare hours, costs, and your situation",
+      "Update changes quickly (hours, income, provider) to avoid repayment"
+    ],
+    "notes": [
+      "This allowance has strict rules. Missing updates can lead to repayment."
+    ]
+  },
+  {
+    "id": "zorgtoeslag",
+    "name": "Zorgtoeslag",
+    "category": "national",
+    "administrator": "Belastingdienst",
+    "official_website": "https://www.belastingdienst.nl/wps/wcm/connect/nl/toeslagen/zorgtoeslag",
+    "short_description": "Monthly allowance to help pay for health insurance.",
+    "eligibility_plain_language": "You may receive this if you are 18 or older, have Dutch health insurance, and your income is below a certain limit.",
+    "required_documents": [
+      "DigiD",
+      "Valid ID or residence permit",
+      "BSN",
+      "Proof you have Dutch health insurance (usually checked automatically)",
+      "Income estimate for the year",
+      "Bank account (IBAN)"
+    ],
+    "how_to_apply": [
+      "Apply via Toeslagen (Belastingdienst) with DigiD",
+      "Enter your household situation and income estimate",
+      "Update income changes during the year"
+    ],
+    "notes": []
+  },
+  {
+    "id": "huurtoeslag",
+    "name": "Huurtoeslag",
+    "category": "national",
+    "administrator": "Belastingdienst",
+    "official_website": "https://www.belastingdienst.nl/wps/wcm/connect/nl/toeslagen/huurtoeslag",
+    "short_description": "Monthly help with paying rent for an independent rental home.",
+    "eligibility_plain_language": "You may receive this if you rent an independent home, your rent is below a maximum limit, and your income and savings are below thresholds.",
+    "required_documents": [
+      "DigiD",
+      "Rental contract",
+      "Rent amount and service costs breakdown",
+      "Proof of address / registration (if requested)",
+      "Income estimate for the year",
+      "Savings/assets information (if requested)",
+      "Bank account (IBAN)"
+    ],
+    "how_to_apply": [
+      "Check if your home is an independent rental home",
+      "Apply via Toeslagen (Belastingdienst) with DigiD",
+      "Enter rent details, household details, and income estimate",
+      "Update changes (moving, rent change, income) promptly"
+    ],
+    "notes": [
+      "Savings/assets limits can affect eligibility."
+    ]
+  },
+  {
+    "id": "alo_kop",
+    "name": "Alleenstaande ouderkop (ALO-kop)",
+    "category": "national",
+    "administrator": "Belastingdienst",
+    "official_website": "https://www.belastingdienst.nl/wps/wcm/connect/nl/toeslagen/alleenstaande-ouderkop",
+    "short_description": "Extra amount for single parents, added automatically to the child-related budget (kindgebonden budget).",
+    "eligibility_plain_language": "You receive this automatically if you are a single parent and eligible for kindgebonden budget. No separate application is needed.",
+    "required_documents": [
+      "No separate documents (it is included via kindgebonden budget)."
+    ],
+    "how_to_apply": [
+      "Apply for kindgebonden budget (if you don’t already receive it)",
+      "If you qualify as a single parent, ALO-kop is included automatically"
+    ],
+    "notes": [
+      "If your household situation changes (partner moves in/out), it can change your amount."
+    ]
+  }
+]

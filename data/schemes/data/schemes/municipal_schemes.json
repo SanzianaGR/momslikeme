@@ -1,0 +1,161 @@
+{
+  "version": "1.0",
+  "updated_at": "2025-12-13",
+  "municipal_schemes": [
+    {
+      "id": "amsterdam_bijzondere_bijstand",
+      "municipality": "Amsterdam",
+      "scheme_type": "bijzondere_bijstand",
+      "name": "Special Assistance (Bijzondere bijstand)",
+      "official_website": "https://www.amsterdam.nl/werk-en-inkomen/bijzondere-bijstand/",
+      "short_description": "Financial support for necessary and unexpected costs that you cannot pay yourself.",
+      "eligibility_plain_language": [
+        "You live in Amsterdam or Weesp",
+        "You have low income and limited savings",
+        "The costs are necessary and exceptional",
+        "The costs are not covered by another scheme"
+      ],
+      "required_documents": [
+        "Valid ID or residence permit",
+        "Proof of address (if requested)",
+        "Recent income statements (salary, benefits)",
+        "Recent bank statements",
+        "Invoices or quotes for the exceptional costs",
+        "Rental contract and rent proof (if housing-related)"
+      ],
+      "how_to_apply": [
+        "Check whether your cost type is listed on the website",
+        "Apply online or request a paper form",
+        "Upload or send the required documents",
+        "Wait for the municipality’s decision"
+      ],
+      "notes": [
+        "Decision time depends on whether all documents are provided."
+      ]
+    },
+    {
+      "id": "amsterdam_stadspas",
+      "municipality": "Amsterdam",
+      "scheme_type": "stadspas",
+      "name": "Stadspas",
+      "official_website": "https://www.amsterdam.nl/stadspas/stadspas-aanvragen/",
+      "short_description": "City pass that gives discounts for sports, culture, and activities.",
+      "eligibility_plain_language": [
+        "You live in Amsterdam or Weesp",
+        "You have a low income and limited savings",
+        "You are 18 or older"
+      ],
+      "required_documents": [
+        "DigiD (for online application)",
+        "Proof of income",
+        "Proof of identity"
+      ],
+      "how_to_apply": [
+        "Apply online via the Stadspas website",
+        "Upload the requested documents",
+        "Receive the pass by mail if approved"
+      ],
+      "notes": []
+    },
+    {
+      "id": "rotterdam_bijzondere_bijstand",
+      "municipality": "Rotterdam",
+      "scheme_type": "bijzondere_bijstand",
+      "name": "Special Assistance (Bijzondere bijstand)",
+      "official_website": "https://www.rotterdam.nl/bijzondere-bijstand",
+      "short_description": "Support for exceptional and necessary costs for residents with low income.",
+      "eligibility_plain_language": [
+        "You live in Rotterdam",
+        "You have low income and limited savings",
+        "The costs are necessary and exceptional"
+      ],
+      "required_documents": [
+        "DigiD (if applying online)",
+        "Proof of income",
+        "Recent bank statements",
+        "Invoices or quotes for the costs",
+        "Valid ID"
+      ],
+      "how_to_apply": [
+        "Select the type of cost on the website",
+        "Apply online with DigiD or by mail",
+        "Submit the required documents"
+      ],
+      "notes": []
+    },
+    {
+      "id": "rotterdam_kwijtschelding",
+      "municipality": "Rotterdam",
+      "scheme_type": "kwijtschelding_gemeentelijke_belastingen",
+      "name": "Municipal Tax Remission",
+      "official_website": "https://www.rotterdam.nl/kwijtschelding-afvalstoffenheffing-aanvragen",
+      "short_description": "Reduction or exemption from municipal taxes for low-income households.",
+      "eligibility_plain_language": [
+        "You have low income and limited savings",
+        "You are unable to pay municipal taxes"
+      ],
+      "required_documents": [
+        "DigiD",
+        "Recent bank statements",
+        "Proof of income",
+        "Tax assessment letter (if available)"
+      ],
+      "how_to_apply": [
+        "Complete the online checklist",
+        "Submit the remission request",
+        "Upload the requested documents"
+      ],
+      "notes": []
+    },
+    {
+      "id": "utrecht_bijzondere_bijstand",
+      "municipality": "Utrecht",
+      "scheme_type": "bijzondere_bijstand",
+      "name": "Special Assistance (Bijzondere bijstand)",
+      "official_website": "https://www.utrecht.nl/werk-en-inkomen/bijzondere-bijstand/",
+      "short_description": "Financial support for special costs you cannot pay yourself.",
+      "eligibility_plain_language": [
+        "You live in Utrecht",
+        "You have low income and limited savings",
+        "The costs are necessary and exceptional"
+      ],
+      "required_documents": [
+        "Valid ID or residence permit",
+        "Proof of income",
+        "Recent bank statements",
+        "Invoices or cost estimates",
+        "Proof of housing costs (if applicable)"
+      ],
+      "how_to_apply": [
+        "Check eligibility on the Utrecht website",
+        "Apply online or via the municipality",
+        "Provide all required documents"
+      ],
+      "notes": []
+    },
+    {
+      "id": "utrecht_u_pas",
+      "municipality": "Utrecht",
+      "scheme_type": "stadspas",
+      "name": "U-pas",
+      "official_website": "https://www.u-pas.nl/",
+      "short_description": "City pass for discounts on sports, culture, and activities.",
+      "eligibility_plain_language": [
+        "You live in Utrecht",
+        "You have a low income",
+        "You meet the U-pas income thresholds"
+      ],
+      "required_documents": [
+        "DigiD",
+        "Proof of income",
+        "Proof of address"
+      ],
+      "how_to_apply": [
+        "Apply online via the U-pas website",
+        "Upload income documents",
+        "Receive the pass if approved"
+      ],
+      "notes": []
+    }
+  ]
+}
