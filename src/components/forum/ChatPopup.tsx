@@ -27,16 +27,7 @@ const simulatedResponses = [
 ];
 
 export function ChatPopup({ recipientId, recipientName, currentUserId, language, onClose }: ChatPopupProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      content: language === 'en' 
-        ? `Hi! Thanks for reaching out. How can I help? 😊`
-        : `Hoi! Bedankt voor je bericht. Hoe kan ik helpen? 😊`,
-      senderId: recipientId,
-      timestamp: new Date(Date.now() - 60000).toISOString()
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
