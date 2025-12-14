@@ -17,9 +17,11 @@ const Index = () => {
   const {
     messages,
     isLoading,
+    isTyping,
     quickReplies,
     benefitMatches,
     sendMessage,
+    sendFile,
   } = useChat();
 
   const handleAddBenefitToTasks = (benefit: Benefit, matchScore: number) => {
@@ -155,7 +157,9 @@ const Index = () => {
           <ChatView
             messages={messages}
             onSendMessage={sendMessage}
+            onSendFile={sendFile}
             isLoading={isLoading}
+            isTyping={isTyping}
             quickReplies={quickReplies}
             hasRecommendations={benefitMatches.length > 0}
             benefitMatches={benefitMatches}

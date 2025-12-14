@@ -14,7 +14,9 @@ import { Shield, Users, Home, Heart, ArrowUp } from 'lucide-react';
 interface ChatViewProps {
   messages: ChatMessageType[];
   onSendMessage: (message: string) => void;
+  onSendFile?: (file: File) => void;
   isLoading: boolean;
+  isTyping?: boolean;
   quickReplies?: string[];
   hasRecommendations?: boolean;
   benefitMatches?: BenefitMatch[];
@@ -24,8 +26,10 @@ interface ChatViewProps {
 
 export function ChatView({ 
   messages, 
-  onSendMessage, 
-  isLoading, 
+  onSendMessage,
+  onSendFile,
+  isLoading,
+  isTyping = false,
   quickReplies = [], 
   hasRecommendations = false, 
   benefitMatches = [],
@@ -113,6 +117,12 @@ export function ChatView({
       onSendMessage(text);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }
+  };
+
+  const handleFileSend = (file: File) => {
+    if (!hasStarted) setHasStarted(true);
+    onSendFile?.(file);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   };
 
   const handleNextBenefit = () => {
@@ -216,6 +226,7 @@ export function ChatView({
               </p>
               <ChatInputBox
                 onSend={handleStart}
+                onSendFile={handleFileSend}
                 isLoading={isLoading}
                 placeholder={language === 'en' ? 'Type your situation here...' : 'Typ hier je situatie...'}
               />
@@ -312,8 +323,8 @@ export function ChatView({
                 );
               })}
 
-              {/* Loading state with Bloom */}
-              {isLoading && (
+              {/* Typing indicator */}
+              {isTyping && (
                 <div className="flex gap-4 items-start animate-fade-in">
                   <div className="hidden md:flex flex-col items-center flex-shrink-0">
                     <BloomFlower 
@@ -323,7 +334,7 @@ export function ChatView({
                       sparkling={false}
                     />
                     <p className="text-xs text-muted-foreground mt-1 text-center">
-                      {language === 'en' ? "Thinking..." : "Denkt na..."}
+                      {language === 'en' ? "Typing..." : "Aan het typen..."}
                     </p>
                   </div>
                   <div className="flex md:hidden flex-shrink-0">
@@ -336,14 +347,14 @@ export function ChatView({
                   </div>
                   <div className="bg-card border-2 border-border/50 rounded-2xl p-4">
                     <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground italic">
+                        {language === 'en' ? 'Bloom is typing' : 'Bloom typt'}
+                      </span>
                       <div className="flex gap-1">
                         <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                         <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                         <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      <span className="text-sm text-muted-foreground italic">
-                        {language === 'en' ? 'Bloom is thinking...' : 'Bloom denkt na...'}
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -378,6 +389,7 @@ export function ChatView({
                         onSendMessage(msg);
                         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
                       }}
+                      onSendFile={handleFileSend}
                       isLoading={isLoading}
                       placeholder={language === 'en' ? 'Type your message...' : 'Typ je bericht...'}
                     />

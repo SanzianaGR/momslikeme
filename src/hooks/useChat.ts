@@ -5,6 +5,52 @@ import { getBenefitById } from '@/data/benefits';
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
+// Simulate typing delay based on message length
+const getTypingDelay = (text: string): number => {
+  const baseDelay = 400;
+  const perCharDelay = 15;
+  return Math.min(baseDelay + text.length * perCharDelay, 2500);
+};
+
+// Hardcoded document explanations
+const documentExplanations: Record<string, { title: string; explanation: string; quickReplies: string[] }> = {
+  'pdf': {
+    title: 'Document Analysis',
+    explanation: `I can see this looks like a government letter or official document! 📄\n\nHere's what I notice:\n• This appears to be related to benefits or taxes\n• There might be important deadlines mentioned\n• You may need to take action or respond\n\nWould you like me to help you understand what action might be needed?`,
+    quickReplies: ['What should I do next?', 'Is this about a benefit?', 'Help me respond to this']
+  },
+  'belastingdienst': {
+    title: 'Tax Office Letter',
+    explanation: `This looks like a letter from the Belastingdienst (Tax Office)! 📋\n\n**In simple terms:**\n• The Tax Office handles things like toeslagen (benefits) and taxes\n• This letter might be about your zorgtoeslag, huurtoeslag, or kinderopvangtoeslag\n• Don't worry — I can help you understand what it means!\n\nThe most important thing is to check if there's a deadline (usually shown at the top of the letter).`,
+    quickReplies: ['Is there a deadline?', 'What benefits is this about?', 'Help me understand the amounts']
+  },
+  'gemeente': {
+    title: 'Municipality Letter', 
+    explanation: `This appears to be from your gemeente (municipality)! 🏛️\n\n**What this usually means:**\n• Your local gemeente handles things like bijzondere bijstand (special assistance)\n• They might be asking for more information or confirming something\n• Municipal letters often have local support options\n\nRemember: your gemeente wants to help! They have many local programs available.`,
+    quickReplies: ['What local help is available?', 'Do I need to respond?', 'Tell me about bijzondere bijstand']
+  },
+  'default': {
+    title: 'Document Received',
+    explanation: `Thank you for sharing this document with me! 📄\n\n**Here's what I can help with:**\n• Understanding official language in plain Dutch/English\n• Identifying what action you might need to take\n• Finding benefits or support related to this document\n\nCould you tell me a bit more about what this document is about, or what concerns you have about it?`,
+    quickReplies: ['What does this mean?', 'Do I need to do anything?', 'Is this about money I could receive?']
+  }
+};
+
+// Get document explanation based on filename
+function getDocumentExplanation(filename: string): { title: string; explanation: string; quickReplies: string[] } {
+  const lower = filename.toLowerCase();
+  if (lower.includes('belasting') || lower.includes('toeslag') || lower.includes('tax')) {
+    return documentExplanations['belastingdienst'];
+  }
+  if (lower.includes('gemeente') || lower.includes('municipal') || lower.includes('bijstand')) {
+    return documentExplanations['gemeente'];
+  }
+  if (lower.includes('.pdf')) {
+    return documentExplanations['pdf'];
+  }
+  return documentExplanations['default'];
+}
+
 // Simple response generation - in production, this would call GreenPT API
 function generateResponse(userMessage: string, profile: Partial<ParentProfile>): {
   response: string;
@@ -102,6 +148,7 @@ function generateResponse(userMessage: string, profile: Partial<ParentProfile>):
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   const [profile, setProfile] = useState<Partial<ParentProfile>>({});
   const [benefitMatches, setBenefitMatches] = useState<BenefitMatch[]>([]);
@@ -117,12 +164,19 @@ export function useChat() {
 
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    setIsTyping(true);
     setQuickReplies([]);
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
+    // Natural "thinking" delay
+    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 400));
 
     const { response, quickReplies: newQuickReplies, updatedProfile } = generateResponse(content, profile);
+
+    // Simulate typing based on response length
+    const typingDelay = getTypingDelay(response);
+    await new Promise(resolve => setTimeout(resolve, typingDelay));
+
+    setIsTyping(false);
 
     const assistantMessage: ChatMessage = {
       id: generateId(),
@@ -141,6 +195,41 @@ export function useChat() {
 
     setIsLoading(false);
   }, [profile]);
+
+  const sendFile = useCallback(async (file: File) => {
+    const userMessage: ChatMessage = {
+      id: generateId(),
+      role: 'user',
+      content: `📎 Shared document: ${file.name}`,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setIsTyping(true);
+    setQuickReplies([]);
+
+    // Simulate document processing delay
+    await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 800));
+
+    const docExplanation = getDocumentExplanation(file.name);
+    
+    // Typing delay for response
+    await new Promise(resolve => setTimeout(resolve, getTypingDelay(docExplanation.explanation)));
+    
+    setIsTyping(false);
+
+    const assistantMessage: ChatMessage = {
+      id: generateId(),
+      role: 'assistant',
+      content: docExplanation.explanation,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, assistantMessage]);
+    setQuickReplies(docExplanation.quickReplies);
+    setIsLoading(false);
+  }, []);
 
   const addTaskForBenefit = useCallback((benefitId: string) => {
     const benefit = getBenefitById(benefitId);
@@ -176,11 +265,13 @@ export function useChat() {
   return {
     messages,
     isLoading,
+    isTyping,
     quickReplies,
     profile,
     benefitMatches,
     tasks,
     sendMessage,
+    sendFile,
     addTaskForBenefit,
     toggleTask,
     deleteTask,
