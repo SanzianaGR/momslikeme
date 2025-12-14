@@ -1,1 +1,7 @@
 project_id = "rcxvfbdxgjnibgiklosl"
+
+[functions.greenpt-chat]
+verify_jwt = false
+
+[functions.benefits-match]
+verify_jwt = false
