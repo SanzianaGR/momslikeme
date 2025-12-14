@@ -22,6 +22,7 @@ const Index = () => {
     benefitMatches,
     sendMessage,
     sendFile,
+    resetConversation,
   } = useChat();
 
   const handleAddBenefitToTasks = (benefit: Benefit, matchScore: number) => {
@@ -165,6 +166,7 @@ const Index = () => {
             benefitMatches={benefitMatches}
             language={language}
             onAddBenefitToTasks={handleAddBenefitToTasks}
+            onReset={resetConversation}
           />
         )}
 
