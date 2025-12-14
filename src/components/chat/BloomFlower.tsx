@@ -12,31 +12,6 @@ export function BloomFlower({ className, speaking = false, growthStage = 1, spar
   
   return (
     <div className={cn("relative", className)}>
-      {/* Sparkles when recommendations are found */}
-      {sparkling && (
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(12)].map((_, i) => (
-            <svg
-              key={i}
-              className="absolute animate-twinkle"
-              style={{
-                left: `${10 + Math.cos(i * 0.52) * 45 + 25}%`,
-                top: `${10 + Math.sin(i * 0.52) * 40 + 20}%`,
-                animationDelay: `${i * 0.12}s`,
-                width: 14 + (i % 3) * 6,
-                height: 14 + (i % 3) * 6,
-              }}
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M12 2L13.5 9L20 12L13.5 15L12 22L10.5 15L4 12L10.5 9L12 2Z"
-                className="fill-warning"
-              />
-            </svg>
-          ))}
-        </div>
-      )}
       
       <svg 
         viewBox="0 0 120 140" 
