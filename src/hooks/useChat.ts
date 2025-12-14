@@ -13,81 +13,128 @@ const getTypingDelay = (text: string): number => {
   return Math.min(baseDelay + text.length * perCharDelay, 1500);
 };
 
+// List of Dutch municipalities for matching
+const DUTCH_MUNICIPALITIES = [
+  "Amsterdam", "Rotterdam", "Den Haag", "Utrecht", "Eindhoven", "Groningen", "Tilburg", 
+  "Almere", "Breda", "Nijmegen", "Enschede", "Haarlem", "Arnhem", "Zaanstad", "Amersfoort",
+  "Apeldoorn", "Hoofddorp", "Maastricht", "Leiden", "Dordrecht", "Zoetermeer", "Zwolle",
+  "Deventer", "Delft", "Alkmaar", "Heerlen", "Venlo", "Leeuwarden", "Amsterdam Zuidoost",
+  "Hilversum", "Amstelveen", "Oss", "Schiedam", "Spijkenisse", "Helmond", "Vlaardingen",
+  "Purmerend", "Alphen aan den Rijn", "Lelystad", "Hoorn", "Ede", "Hengelo", "Capelle aan den IJssel"
+];
+
 // Parse profile info from user messages
 function parseProfileFromMessage(message: string, currentProfile: Partial<ParentProfile>): Partial<ParentProfile> {
   const lower = message.toLowerCase();
   const updated = { ...currentProfile };
 
-  // Children count - check specific button texts first
-  if (lower.includes('3 or more') || lower.includes('3+')) {
-    updated.numberOfChildren = 3;
-  } else if (lower.includes('2 child') || lower === '2 children') {
-    updated.numberOfChildren = 2;
-  } else if (lower.includes('1 child') || lower === '1 child' || lower.includes('one child')) {
-    updated.numberOfChildren = 1;
-  } else if (lower.includes('yes') && lower.includes('children')) {
-    updated.numberOfChildren = 1; // Default to 1 if they just say yes
-  }
-  const numMatch = lower.match(/(\d+)\s*(child|kid|kinderen|children)/i);
-  if (numMatch && !updated.numberOfChildren) {
-    updated.numberOfChildren = parseInt(numMatch[1]);
-  }
-
-  // Ages - match exact button texts
-  if (lower.includes('baby') || lower.includes('toddler') || lower.includes('0-4')) {
-    updated.childrenAges = [2];
-  } else if (lower.includes('school age') || lower.includes('4-12')) {
-    updated.childrenAges = [8];
-  } else if (lower.includes('teen') || lower.includes('12-18')) {
-    updated.childrenAges = [14];
-  } else if (lower.includes('mixed')) {
-    updated.childrenAges = [4, 10];
+  // Children count
+  if (!updated.numberOfChildren) {
+    if (lower.includes('3 or more') || lower.includes('3+') || lower.includes('three')) {
+      updated.numberOfChildren = 3;
+    } else if (lower.includes('2 child') || lower === '2 children' || lower.includes('two')) {
+      updated.numberOfChildren = 2;
+    } else if (lower.includes('1 child') || lower === '1 child' || lower.includes('one child')) {
+      updated.numberOfChildren = 1;
+    } else if (lower.includes('yes') && (lower.includes('children') || lower.includes('child'))) {
+      updated.numberOfChildren = 1;
+    }
+    const numMatch = lower.match(/(\d+)\s*(child|kid|kinderen|children)/i);
+    if (numMatch && !updated.numberOfChildren) {
+      updated.numberOfChildren = parseInt(numMatch[1]);
+    }
   }
 
-  // Housing - match exact button texts
-  if (lower.includes('renting privately') || (lower.includes('rent') && !lower.includes('social'))) {
-    updated.housingType = 'rent';
-  } else if (lower.includes('social housing') || lower.includes('social')) {
-    updated.housingType = 'social';
-  } else if (lower.includes('own home') || lower.includes('own')) {
-    updated.housingType = 'own';
-  } else if (lower.includes('living with family') || lower.includes('family')) {
-    updated.housingType = 'family';
+  // Ages
+  if (!updated.childrenAges || updated.childrenAges.length === 0) {
+    if (lower.includes('baby') || lower.includes('toddler') || lower.includes('0-4')) {
+      updated.childrenAges = [2];
+    } else if (lower.includes('school age') || lower.includes('4-12')) {
+      updated.childrenAges = [8];
+    } else if (lower.includes('teen') || lower.includes('12-18')) {
+      updated.childrenAges = [14];
+    } else if (lower.includes('mixed')) {
+      updated.childrenAges = [4, 10];
+    }
   }
 
-  // Income - MUST check more specific patterns FIRST (order matters!)
-  if (lower.includes('above') || lower.includes('€3,500') || lower.includes('3500+')) {
-    updated.monthlyIncome = 4000;
-  } else if (lower.includes('2,500-3,500') || lower.includes('2500-3500')) {
-    updated.monthlyIncome = 3000;
-  } else if (lower.includes('1,500-2,500') || lower.includes('1500-2500')) {
-    updated.monthlyIncome = 2000;
-  } else if (lower.includes('under') || lower.includes('under €1,500') || lower.includes('€1,500') && !lower.includes('-')) {
-    updated.monthlyIncome = 1200;
+  // Municipality - check for known municipalities
+  if (!updated.municipality) {
+    for (const muni of DUTCH_MUNICIPALITIES) {
+      if (lower.includes(muni.toLowerCase())) {
+        updated.municipality = muni;
+        break;
+      }
+    }
   }
 
-  // Employment - match exact button texts
-  if (lower.includes('full-time') || lower.includes('fulltime')) {
-    updated.employmentStatus = 'employed';
-  } else if (lower.includes('part-time') || lower.includes('parttime')) {
-    updated.employmentStatus = 'part-time';
-  } else if (lower.includes('looking for work') || lower.includes('looking')) {
-    updated.employmentStatus = 'unemployed';
-  } else if (lower.includes('studying') || lower.includes('study') || lower.includes('student')) {
-    updated.employmentStatus = 'student';
-  } else if (lower.includes('unable to work') || lower.includes('unable')) {
-    updated.employmentStatus = 'unable';
+  // Housing
+  if (!updated.housingType) {
+    if (lower.includes('renting privately') || (lower.includes('rent') && !lower.includes('social'))) {
+      updated.housingType = 'rent';
+    } else if (lower.includes('social housing') || lower.includes('social')) {
+      updated.housingType = 'social';
+    } else if (lower.includes('own home') || lower.includes('own')) {
+      updated.housingType = 'own';
+    } else if (lower.includes('living with family') || lower.includes('family')) {
+      updated.housingType = 'family';
+    }
   }
 
-  // Challenges - match exact button texts
-  if (lower.includes('childcare cost') || lower.includes('childcare')) {
-    updated.challenges = 'childcare';
-  } else if (lower.includes('healthcare expense') || lower.includes('healthcare')) {
-    updated.challenges = 'healthcare';
-  } else if (lower.includes('making ends meet') || lower.includes('ends meet')) {
-    updated.challenges = 'financial';
-  } else if (lower.includes('everything feels') || lower.includes('everything')) {
-    updated.challenges = 'multiple';
+  // Income - check specific patterns first
+  if (!updated.monthlyIncome) {
+    if (lower.includes('above') || lower.includes('€3,500') || lower.includes('3500+')) {
+      updated.monthlyIncome = 4000;
+    } else if (lower.includes('2,500-3,500') || lower.includes('2500-3500')) {
+      updated.monthlyIncome = 3000;
+    } else if (lower.includes('1,500-2,500') || lower.includes('1500-2500')) {
+      updated.monthlyIncome = 2000;
+    } else if (lower.includes('under') || (lower.includes('€1,500') && !lower.includes('-'))) {
+      updated.monthlyIncome = 1200;
+    }
+  }
+
+  // Employment
+  if (!updated.employmentStatus) {
+    if (lower.includes('full-time') || lower.includes('fulltime')) {
+      updated.employmentStatus = 'employed';
+    } else if (lower.includes('part-time') || lower.includes('parttime')) {
+      updated.employmentStatus = 'part-time';
+    } else if (lower.includes('looking for work') || lower.includes('looking')) {
+      updated.employmentStatus = 'unemployed';
+    } else if (lower.includes('studying') || lower.includes('study') || lower.includes('student')) {
+      updated.employmentStatus = 'student';
+    } else if (lower.includes('unable to work') || lower.includes('unable')) {
+      updated.employmentStatus = 'unable';
+    }
+  }
+
+  // Childcare
+  if (updated.usesChildcare === undefined) {
+    if (lower.includes('yes') && (lower.includes('childcare') || lower.includes('daycare') || lower.includes('opvang'))) {
+      updated.usesChildcare = true;
+    } else if (lower.includes('no') && (lower.includes('childcare') || lower.includes('daycare'))) {
+      updated.usesChildcare = false;
+    } else if (lower === 'yes, i use childcare' || lower === 'yes') {
+      updated.usesChildcare = true;
+    } else if (lower === 'no, not currently' || lower === 'no') {
+      updated.usesChildcare = false;
+    }
+  }
+
+  // Challenges
+  if (!updated.challenges) {
+    if (lower.includes('childcare cost') || (lower.includes('childcare') && !lower.includes('use'))) {
+      updated.challenges = 'childcare';
+    } else if (lower.includes('healthcare expense') || lower.includes('healthcare')) {
+      updated.challenges = 'healthcare';
+    } else if (lower.includes('rent') || lower.includes('housing')) {
+      updated.challenges = 'housing';
+    } else if (lower.includes('making ends meet') || lower.includes('ends meet')) {
+      updated.challenges = 'financial';
+    } else if (lower.includes('everything feels') || lower.includes('overwhelming')) {
+      updated.challenges = 'multiple';
+    }
   }
 
   return updated;
@@ -98,9 +145,11 @@ function buildProfileContext(profile: Partial<ParentProfile>): string {
   const parts: string[] = [];
   if (profile.numberOfChildren) parts.push(`Children: ${profile.numberOfChildren}`);
   if (profile.childrenAges?.length) parts.push(`Ages: ${Array.isArray(profile.childrenAges) ? profile.childrenAges.join(', ') : profile.childrenAges}`);
+  if (profile.municipality) parts.push(`Municipality: ${profile.municipality}`);
   if (profile.housingType) parts.push(`Housing: ${profile.housingType}`);
   if (profile.monthlyIncome) parts.push(`Monthly income: ~€${profile.monthlyIncome}`);
   if (profile.employmentStatus) parts.push(`Employment: ${profile.employmentStatus}`);
+  if (profile.usesChildcare !== undefined) parts.push(`Uses childcare: ${profile.usesChildcare ? 'Yes' : 'No'}`);
   if (profile.challenges) parts.push(`Main challenge: ${profile.challenges}`);
   return parts.length > 0 ? parts.join('\n') : 'No information gathered yet.';
 }
@@ -129,16 +178,18 @@ async function callAI(messages: { role: string; content: string }[], isDocument 
   }
 }
 
-// Get conversation stage - we need at least 5 answered questions before matching
-type Stage = 'greeting' | 'children' | 'ages' | 'housing' | 'income' | 'employment' | 'challenges' | 'ready';
+// Get conversation stage - we need at least 7 answered questions before matching
+type Stage = 'greeting' | 'children' | 'ages' | 'municipality' | 'housing' | 'income' | 'employment' | 'childcare' | 'challenges' | 'ready';
 
 function countAnsweredQuestions(profile: Partial<ParentProfile>): number {
   let count = 0;
   if (profile.numberOfChildren) count++;
   if (profile.childrenAges && profile.childrenAges.length > 0) count++;
+  if (profile.municipality) count++;
   if (profile.housingType) count++;
   if (profile.monthlyIncome) count++;
   if (profile.employmentStatus) count++;
+  if (profile.usesChildcare !== undefined) count++;
   if (profile.challenges) count++;
   return count;
 }
@@ -146,10 +197,12 @@ function countAnsweredQuestions(profile: Partial<ParentProfile>): number {
 function getStage(profile: Partial<ParentProfile>): Stage {
   if (!profile.numberOfChildren) return 'greeting';
   if (!profile.childrenAges || profile.childrenAges.length === 0) return 'children';
-  if (!profile.housingType) return 'ages';
+  if (!profile.municipality) return 'ages';
+  if (!profile.housingType) return 'municipality';
   if (!profile.monthlyIncome) return 'housing';
   if (!profile.employmentStatus) return 'income';
-  if (!profile.challenges) return 'employment';
+  if (profile.usesChildcare === undefined) return 'employment';
+  if (!profile.challenges) return 'childcare';
   return 'ready';
 }
 
@@ -396,12 +449,14 @@ export function useChat() {
   // Helper to get quick replies based on conversation stage
   function getQuickRepliesForStage(stage: Stage): string[] {
     switch (stage) {
-      case 'greeting': return ['Yes, I have children', '1 child', '2 children', '3 or more'];
+      case 'greeting': return ['1 child', '2 children', '3 or more'];
       case 'children': return ['Baby/toddler (0-4)', 'School age (4-12)', 'Teenager (12-18)', 'Mixed ages'];
-      case 'ages': return ['Renting privately', 'Social housing', 'Own home', 'Living with family'];
+      case 'ages': return ['Amsterdam', 'Rotterdam', 'Den Haag', 'Utrecht'];
+      case 'municipality': return ['Renting privately', 'Social housing', 'Own home', 'Living with family'];
       case 'housing': return ['Under €1,500', '€1,500-2,500', '€2,500-3,500', 'Above €3,500'];
-      case 'income': return ['Full-time', 'Part-time', 'Looking for work', 'Studying', 'Unable to work'];
-      case 'employment': return ['Childcare costs', 'Healthcare expenses', 'Making ends meet', 'Everything feels hard'];
+      case 'income': return ['Full-time', 'Part-time', 'Looking for work', 'Studying'];
+      case 'employment': return ['Yes, I use childcare', 'No, not currently'];
+      case 'childcare': return ['Childcare costs', 'Healthcare expenses', 'Rent/housing costs', 'Everything feels overwhelming'];
       case 'ready': return [];
       default: return [];
     }

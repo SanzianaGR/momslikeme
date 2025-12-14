@@ -8,6 +8,7 @@ export interface ParentProfile {
   housingType?: 'rent' | 'own' | 'social' | 'family';
   employmentStatus?: 'employed' | 'part-time' | 'unemployed' | 'self-employed' | 'student' | 'studying' | 'unable';
   hasChildcareNeeds: boolean;
+  usesChildcare?: boolean;
   healthInsurance: boolean;
   receivingBenefits: string[];
   concerns: string[];
