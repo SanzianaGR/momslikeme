@@ -1,9 +1,10 @@
 import { Task } from '@/types';
 import { useState } from 'react';
-import { ChevronDown, Euro, ExternalLink, Download, Mail, Sparkles, Users, FileText, ListChecks } from 'lucide-react';
+import { ChevronDown, Euro, ExternalLink, Download, Mail, Sparkles, Users, FileText, ListChecks, Phone, HelpCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HandDrawnCheckbox } from './HandDrawnCheckbox';
 import { FloatingDoodles } from './FloatingDoodles';
+import { allBenefits, BenefitFull } from '@/data/allBenefits';
 
 interface MyBenefitsViewProps {
   tasks: Task[];
@@ -15,6 +16,12 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
   const [expandedTask, setExpandedTask] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, string[]>>({});
 
+  // Get full benefit details from allBenefits
+  const getBenefitDetails = (benefitId?: string): BenefitFull | undefined => {
+    if (!benefitId) return undefined;
+    return allBenefits.find(b => b.id === benefitId);
+  };
+
   const t = {
     title: language === 'nl' ? 'Jouw Voordelen' : 'Your Benefits',
     subtitle: language === 'nl' 
@@ -25,14 +32,21 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
       ? 'Praat met Bloom om voordelen te ontdekken waar je recht op hebt. Elk voordeel dat je toevoegt verschijnt hier als een stap op je pad.' 
       : 'Chat with Bloom to discover benefits you deserve. Every benefit you add will appear here as a step on your path.',
     whoIsEligible: language === 'nl' ? 'Wie komt in aanmerking?' : 'Who is eligible?',
-    whatYouNeed: language === 'nl' ? 'Wat heb je nodig?' : 'What do you need?',
+    whatYouNeed: language === 'nl' ? 'Wat heb je nodig?' : 'What documents do you need?',
     howToApply: language === 'nl' ? 'Hoe aanvragen?' : 'How to apply?',
+    importantNotes: language === 'nl' ? 'Belangrijk om te weten' : 'Important to know',
     amount: language === 'nl' ? 'Wat je krijgt' : 'What you\'ll receive',
     apply: language === 'nl' ? 'Ga naar aanvraag' : 'Go to application',
     download: language === 'nl' ? 'Download als PDF' : 'Download as PDF',
     email: language === 'nl' ? 'Verstuur naar mijn email' : 'Send to my email',
     youDeserve: language === 'nl' ? 'Je verdient dit. Laten we het regelen.' : 'You deserve this. Let\'s make it happen.',
     itemsCompleted: language === 'nl' ? 'items afgevinkt' : 'items completed',
+    administrator: language === 'nl' ? 'Beheerder' : 'Administrator',
+    needHelp: language === 'nl' ? 'Hulp nodig bij aanvragen?' : 'Need help applying?',
+    helpText: language === 'nl' 
+      ? 'Je kunt gratis hulp krijgen bij het Sociaal Wijkteam in je gemeente. Zij kunnen je helpen met formulieren en documenten.' 
+      : 'You can get free help from the Social District Team (Sociaal Wijkteam) in your municipality. They can help you with forms and documents.',
+    findWijkteam: language === 'nl' ? 'Zoek je wijkteam' : 'Find your local team',
   };
 
   const toggleSection = (taskId: string, section: string) => {
@@ -159,19 +173,44 @@ ${docs}
               const name = language === 'nl' ? (task.titleNl || task.title) : task.title;
               const description = language === 'nl' ? (task.descriptionNl || task.description) : task.description;
 
-              // Mock eligibility criteria based on benefit
-              const eligibilityCriteria = task.benefit?.eligibilityCriteria || [
-                language === 'nl' ? 'Je woont in Nederland' : 'You live in the Netherlands',
-                language === 'nl' ? 'Je hebt een laag inkomen' : 'You have a low income',
-              ];
+              // Get real benefit details from allBenefits
+              const benefitFull = getBenefitDetails(task.benefitId);
+              
+              // Real eligibility criteria from benefit data
+              const eligibilityCriteria = benefitFull 
+                ? (language === 'nl' 
+                    ? (Array.isArray(benefitFull.eligibilityPlainLanguageNl) 
+                        ? benefitFull.eligibilityPlainLanguageNl 
+                        : [benefitFull.eligibilityPlainLanguageNl || benefitFull.eligibilityPlainLanguage])
+                    : (Array.isArray(benefitFull.eligibilityPlainLanguage) 
+                        ? benefitFull.eligibilityPlainLanguage 
+                        : [benefitFull.eligibilityPlainLanguage]))
+                : task.benefit?.eligibilityCriteria || [];
 
-              // How to apply steps
-              const howToApplySteps = [
-                language === 'nl' ? 'Verzamel alle benodigde documenten' : 'Gather all required documents',
-                language === 'nl' ? 'Ga naar de officiële website' : 'Go to the official website',
-                language === 'nl' ? 'Vul het aanvraagformulier in' : 'Fill in the application form',
-                language === 'nl' ? 'Wacht op de beslissing' : 'Wait for the decision',
-              ];
+              // Real required documents from benefit data
+              const requiredDocuments = benefitFull
+                ? (language === 'nl' 
+                    ? (benefitFull.requiredDocumentsNl || benefitFull.requiredDocuments)
+                    : benefitFull.requiredDocuments)
+                : [];
+
+              // Real how-to-apply steps from benefit data
+              const howToApplySteps = benefitFull
+                ? (language === 'nl' 
+                    ? (benefitFull.howToApplyNl || benefitFull.howToApply)
+                    : benefitFull.howToApply)
+                : [];
+
+              // Important notes
+              const notes = benefitFull
+                ? (language === 'nl' 
+                    ? (benefitFull.notesNl || benefitFull.notes || [])
+                    : (benefitFull.notes || []))
+                : [];
+
+              // Official website URL
+              const officialUrl = benefitFull?.officialWebsite || task.applicationUrl;
+              const administrator = benefitFull?.administrator;
 
               return (
                 <div 
@@ -260,8 +299,17 @@ ${docs}
                         {isSectionExpanded(task.id, 'requirements') && (
                           <div className="px-6 pb-4 animate-fade-in">
                             <div className="space-y-2 ml-8">
-                              {/* Steps as checklist */}
-                              {steps.map(step => (
+                              {/* Real required documents from benefit data */}
+                              {requiredDocuments.map((doc, i) => (
+                                <div key={i} className="flex items-start gap-3 py-1">
+                                  <div className="w-5 h-5 rounded border-2 border-dashed border-muted-foreground/40 flex items-center justify-center shrink-0 mt-0.5">
+                                    <FileText className="h-3 w-3 text-muted-foreground" />
+                                  </div>
+                                  <span className="text-sm text-muted-foreground">{doc}</span>
+                                </div>
+                              ))}
+                              {/* Fallback to task steps if no benefit data */}
+                              {requiredDocuments.length === 0 && steps.map(step => (
                                 <HandDrawnCheckbox
                                   key={step.id}
                                   checked={step.completed}
@@ -269,7 +317,7 @@ ${docs}
                                   onChange={() => onToggleStep(task.id, step.id)}
                                 />
                               ))}
-                              {/* Documents as checklist items */}
+                              {/* Task documents */}
                               {documents.map(doc => (
                                 <div key={doc.id} className="flex items-center gap-3 py-1">
                                   <div className={`w-5 h-5 rounded border-2 border-dashed flex items-center justify-center ${doc.uploaded ? 'bg-success/20 border-success' : 'border-muted-foreground/40'}`}>
@@ -293,7 +341,7 @@ ${docs}
                       </div>
 
                       {/* How to apply? */}
-                      <div>
+                      <div className="border-b border-dashed border-border">
                         <button
                           onClick={() => toggleSection(task.id, 'howto')}
                           className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
@@ -308,6 +356,14 @@ ${docs}
                         </button>
                         {isSectionExpanded(task.id, 'howto') && (
                           <div className="px-6 pb-4 animate-fade-in">
+                            {/* Administrator info */}
+                            {administrator && (
+                              <div className="mb-4 p-3 bg-muted/30 rounded-xl border border-dashed border-border">
+                                <p className="text-xs text-muted-foreground mb-1">{t.administrator}</p>
+                                <p className="text-sm font-medium">{administrator}</p>
+                              </div>
+                            )}
+                            
                             <ol className="space-y-3 ml-8 mb-4">
                               {howToApplySteps.map((step, i) => (
                                 <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -318,15 +374,84 @@ ${docs}
                                 </li>
                               ))}
                             </ol>
-                            {task.applicationUrl && (
+                            
+                            {officialUrl && (
                               <Button 
-                                className="w-full bg-primary hover:bg-primary/90"
-                                onClick={() => window.open(task.applicationUrl, '_blank')}
+                                className="w-full bg-primary hover:bg-primary/90 mb-3"
+                                onClick={() => window.open(officialUrl, '_blank')}
                               >
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 {t.apply}
                               </Button>
                             )}
+                            
+                            {/* Official URL display */}
+                            {officialUrl && (
+                              <p className="text-xs text-muted-foreground text-center break-all">
+                                {officialUrl}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Important notes */}
+                      {notes.length > 0 && (
+                        <div className="border-b border-dashed border-border">
+                          <button
+                            onClick={() => toggleSection(task.id, 'notes')}
+                            className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <AlertCircle className="h-5 w-5 text-warning" />
+                              <span className="font-medium">{t.importantNotes}</span>
+                            </div>
+                            <ChevronDown 
+                              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSectionExpanded(task.id, 'notes') ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+                          {isSectionExpanded(task.id, 'notes') && (
+                            <div className="px-6 pb-4 animate-fade-in">
+                              <ul className="space-y-2 ml-8">
+                                {notes.map((note, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                    <span className="text-warning mt-1">⚠</span>
+                                    <span>{note}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Need help section */}
+                      <div>
+                        <button
+                          onClick={() => toggleSection(task.id, 'help')}
+                          className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <HelpCircle className="h-5 w-5 text-secondary" />
+                            <span className="font-medium">{t.needHelp}</span>
+                          </div>
+                          <ChevronDown 
+                            className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSectionExpanded(task.id, 'help') ? 'rotate-180' : ''}`}
+                          />
+                        </button>
+                        {isSectionExpanded(task.id, 'help') && (
+                          <div className="px-6 pb-4 animate-fade-in">
+                            <p className="text-sm text-muted-foreground mb-4 ml-8">
+                              {t.helpText}
+                            </p>
+                            <Button 
+                              variant="outline"
+                              className="w-full border-2 border-dashed border-secondary/50"
+                              onClick={() => window.open('https://www.rijksoverheid.nl/onderwerpen/gemeenten/vraag-en-antwoord/sociaal-wijkteam', '_blank')}
+                            >
+                              <Phone className="h-4 w-4 mr-2" />
+                              {t.findWijkteam}
+                            </Button>
                           </div>
                         )}
                       </div>
