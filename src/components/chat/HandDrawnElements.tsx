@@ -6,6 +6,51 @@ interface DoodleProps {
   style?: CSSProperties;
 }
 
+export function CoinDoodle({ className, style }: DoodleProps) {
+  return (
+    <svg viewBox="0 0 50 50" className={cn("text-warning", className)} style={style}>
+      <circle cx="25" cy="25" r="20" fill="currentColor" opacity="0.8" />
+      <circle cx="25" cy="25" r="16" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.6" />
+      <text x="25" y="30" textAnchor="middle" fontSize="16" fontWeight="bold" fill="hsl(var(--warning-foreground))">€</text>
+    </svg>
+  );
+}
+
+export function MoneyBagDoodle({ className, style }: DoodleProps) {
+  return (
+    <svg viewBox="0 0 60 70" className={cn("text-success", className)} style={style}>
+      <path d="M30 10 L35 5 L40 12 L35 15 L30 10" fill="currentColor" opacity="0.7" />
+      <ellipse cx="30" cy="45" rx="22" ry="20" fill="currentColor" opacity="0.8" />
+      <path d="M15 25 Q30 15 45 25 Q48 35 45 45" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.6" />
+      <text x="30" y="52" textAnchor="middle" fontSize="18" fontWeight="bold" fill="hsl(var(--success-foreground))">€</text>
+    </svg>
+  );
+}
+
+export function BanknoteDoodle({ className, style }: DoodleProps) {
+  return (
+    <svg viewBox="0 0 80 40" className={cn("text-primary", className)} style={style}>
+      <rect x="5" y="5" width="70" height="30" rx="3" fill="currentColor" opacity="0.7" />
+      <rect x="10" y="10" width="60" height="20" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
+      <circle cx="40" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.6" />
+      <text x="40" y="24" textAnchor="middle" fontSize="10" fontWeight="bold" fill="hsl(var(--primary-foreground))">€</text>
+    </svg>
+  );
+}
+
+export function CoinsStackDoodle({ className, style }: DoodleProps) {
+  return (
+    <svg viewBox="0 0 50 60" className={cn("text-warning", className)} style={style}>
+      <ellipse cx="25" cy="50" rx="18" ry="6" fill="currentColor" opacity="0.6" />
+      <ellipse cx="25" cy="44" rx="18" ry="6" fill="currentColor" opacity="0.7" />
+      <ellipse cx="25" cy="38" rx="18" ry="6" fill="currentColor" opacity="0.8" />
+      <ellipse cx="25" cy="32" rx="18" ry="6" fill="currentColor" opacity="0.9" />
+      <ellipse cx="25" cy="26" rx="18" ry="6" fill="currentColor" />
+      <text x="25" y="30" textAnchor="middle" fontSize="10" fontWeight="bold" fill="hsl(var(--warning-foreground))">€€€</text>
+    </svg>
+  );
+}
+
 export function CloudDoodle({ className, style }: DoodleProps) {
   return (
     <svg viewBox="0 0 100 60" className={cn("text-secondary/30", className)} style={style} fill="currentColor">
