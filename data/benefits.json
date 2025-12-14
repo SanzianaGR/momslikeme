@@ -1112,5 +1112,264 @@
     },
     "_logicVerificationFailed": true,
     "scrapedAt": "2025-12-13T20:34:33.034Z"
+  },
+  {
+    "benefitId": "rotterdam-bijzondere-bijstand",
+    "content_mismatch": false,
+    "info": {
+      "name": "Bijzondere bijstand",
+      "provider": "Gemeente Rotterdam",
+      "type": "municipal",
+      "description": "On this page you will find the options for special assistance that you can apply for.",
+      "application_url": null,
+      "eligibility_summary": [
+        "This page provides an overview of options for applying for Bijzondere bijstand (special assistance) in Rotterdam.",
+        "Specific eligibility criteria are not listed on this page and would be found on the linked pages for each type of bijzondere bijstand."
+      ],
+      "required_documents": [],
+      "application_steps": []
+    },
+    "eligibility": {
+      "logic": {},
+      "soft_rules": [],
+      "test_cases": {}
+    },
+    "source": {
+      "url": "https://www.rotterdam.nl/bijzondere-bijstand",
+      "scraped_at": "2025-12-14T10:54:47.666Z"
+    },
+    "scrapedAt": "2025-12-14T10:54:47.667Z"
+  },
+  {
+    "benefitId": "rotterdam-jeugdtegoed",
+    "content_mismatch": false,
+    "info": {
+      "name": "Jeugdtegoed",
+      "provider": "Gemeente Rotterdam",
+      "type": "municipal",
+      "description": "The Jeugdtegoed is an extra for Rotterdam families with a low income. For children aged 4 up to and including 11, the credit is €275 per child per year, for children aged 12 up to and including 17, the credit is €850 per child per year. The youth credit is deposited on the Rotterdam pass of your child(ren) and can be spent at dozens of stores in Rotterdam. For example, on clothing, sports and hobby items, or an OV subscription with the RET.",
+      "application_url": null,
+      "eligibility_summary": [
+        "The benefit is for Rotterdam families with a low income.",
+        "The benefit is for children aged 4 up to and including 17.",
+        "Children aged 4-11 receive €275 per year.",
+        "Children aged 12-17 receive €850 per year.",
+        "The credit is added to the child's Rotterdampas.",
+        "The credit can be spent at participating stores in Rotterdam."
+      ],
+      "required_documents": [],
+      "application_steps": [
+        "Apply for Jeugdtegoed",
+        "Spend Jeugdtegoed",
+        "Find addresses where you can spend the Jeugdtegoed"
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "children.numberOfChildren"
+              },
+              1
+            ]
+          },
+          {
+            "or": [
+              {
+                "and": [
+                  {
+                    ">=": [
+                      {
+                        "var": "personal.age"
+                      },
+                      4
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "personal.age"
+                      },
+                      11
+                    ]
+                  }
+                ]
+              },
+              {
+                "and": [
+                  {
+                    ">=": [
+                      {
+                        "var": "personal.age"
+                      },
+                      12
+                    ]
+                  },
+                  {
+                    "<=": [
+                      {
+                        "var": "personal.age"
+                      },
+                      17
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "soft_rules": [
+        "Low income Rotterdam family"
+      ],
+      "test_cases": {
+        "pass_1": {
+          "personal": {
+            "age": 7
+          },
+          "financial": {
+            "annualIncomeGross": 25000
+          },
+          "children": {
+            "numberOfChildren": 1
+          }
+        },
+        "pass_2": {
+          "personal": {
+            "age": 15
+          },
+          "financial": {
+            "annualIncomeGross": 30000
+          },
+          "children": {
+            "numberOfChildren": 2
+          }
+        },
+        "fail_1": {
+          "personal": {
+            "age": 3
+          },
+          "financial": {
+            "annualIncomeGross": 25000
+          },
+          "children": {
+            "numberOfChildren": 1
+          }
+        },
+        "fail_2": {
+          "personal": {
+            "age": 20
+          },
+          "financial": {
+            "annualIncomeGross": 30000
+          },
+          "children": {
+            "numberOfChildren": 0
+          }
+        }
+      }
+    },
+    "source": {
+      "url": "https://www.rotterdam.nl/jeugdtegoed",
+      "scraped_at": "2025-12-14T10:55:02.456Z"
+    },
+    "scrapedAt": "2025-12-14T10:55:02.456Z"
+  },
+  {
+    "benefitId": "denhaag-ooievaarspas",
+    "content_mismatch": false,
+    "info": {
+      "name": "Ooievaarspas",
+      "provider": "Gemeente Den Haag",
+      "type": "municipal",
+      "description": "The Ooievaarspas is a free pass for people with a low income. With the Ooievaarspas you can do fun things for free or with a discount. For example, sports, going to a concert or taking a course. The pass is for the whole family.",
+      "application_url": "https://www.denhaag.nl/nl/regelingen/ooievaarspas-aanvragen.htm",
+      "eligibility_summary": [
+        "You must live in The Hague.",
+        "Your income must be up to 150% of the social assistance standard (bijstandsnorm).",
+        "If you have a family, your assets must not be higher than € 15,540.",
+        "If you are single, your assets must not be higher than € 7,770.",
+        "Children up to 18 years old can also apply for the Ooievaarspas, even if they don't live with you."
+      ],
+      "required_documents": [
+        "Bank statements of the past month",
+        "Copy of your partner's ID (if applicable)"
+      ],
+      "application_steps": [
+        "If you receive social assistance (bijstandsuitkering), you will automatically receive a letter with instructions on how to obtain the Ooievaarspas.",
+        "If you do not receive social assistance but meet the conditions, you can apply for an Ooievaarspas via the online form.",
+        "For children up to 18 years old, fill in their details on the application form.",
+        "Children of 18 years or older must fill in their own application form."
+      ]
+    },
+    "eligibility": {
+      "logic": {
+        "and": [
+          {
+            "<=": [
+              {
+                "var": "financial.assets"
+              },
+              {
+                "if": [
+                  {
+                    "==": [
+                      {
+                        "var": "personal.maritalStatus"
+                      },
+                      "single"
+                    ]
+                  },
+                  7770,
+                  15540
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "soft_rules": [],
+      "test_cases": {
+        "pass_1": {
+          "personal.age": 30,
+          "personal.maritalStatus": "single",
+          "financial.annualIncomeGross": 25000,
+          "financial.assets": 7000,
+          "children.numberOfChildren": 0,
+          "residence.city": "Den Haag"
+        },
+        "pass_2": {
+          "personal.age": 40,
+          "personal.maritalStatus": "married",
+          "financial.annualIncomeGross": 35000,
+          "financial.assets": 15000,
+          "children.numberOfChildren": 2,
+          "residence.city": "Den Haag"
+        },
+        "fail_1": {
+          "personal.age": 25,
+          "personal.maritalStatus": "single",
+          "financial.annualIncomeGross": 20000,
+          "financial.assets": 8000,
+          "children.numberOfChildren": 0,
+          "residence.city": "Den Haag"
+        },
+        "fail_2": {
+          "personal.age": 50,
+          "personal.maritalStatus": "married",
+          "financial.annualIncomeGross": 40000,
+          "financial.assets": 16000,
+          "children.numberOfChildren": 1,
+          "residence.city": "Den Haag"
+        }
+      }
+    },
+    "source": {
+      "url": "https://www.denhaag.nl/nl/geld-en-schulden/ooievaarspas-aanvragen/",
+      "scraped_at": "2025-12-14T10:55:35.012Z"
+    },
+    "scrapedAt": "2025-12-14T10:55:35.012Z"
   }
 ]
