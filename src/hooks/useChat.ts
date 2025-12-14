@@ -2,41 +2,16 @@ import { useState, useCallback } from 'react';
 import { ChatMessage, ParentProfile, BenefitMatch, Task } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { getBenefitById } from '@/data/benefits';
+import { toast } from 'sonner';
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
 // Simulate typing delay based on message length
 const getTypingDelay = (text: string): number => {
   const baseDelay = 300;
-  const perCharDelay = 12;
-  return Math.min(baseDelay + text.length * perCharDelay, 2000);
+  const perCharDelay = 8;
+  return Math.min(baseDelay + text.length * perCharDelay, 1500);
 };
-
-// Document explanations for file uploads
-const documentExplanations: Record<string, { title: string; explanation: string; quickReplies: string[] }> = {
-  'belastingdienst': {
-    title: 'Tax Office Letter',
-    explanation: `This looks like a letter from the Belastingdienst! It might be about your toeslagen. Check if there's a deadline at the top.`,
-    quickReplies: ['What does it mean?', 'Is there a deadline?', 'Help me respond']
-  },
-  'gemeente': {
-    title: 'Municipality Letter', 
-    explanation: `This is from your gemeente. They might be asking for info or confirming something about local support.`,
-    quickReplies: ['What should I do?', 'Is this about benefits?']
-  },
-  'default': {
-    title: 'Document Received',
-    explanation: `Thanks for sharing! Tell me what this document is about and I'll help you understand it.`,
-    quickReplies: ['What does this mean?', 'Do I need to respond?']
-  }
-};
-
-function getDocumentExplanation(filename: string) {
-  const lower = filename.toLowerCase();
-  if (lower.includes('belasting') || lower.includes('toeslag')) return documentExplanations['belastingdienst'];
-  if (lower.includes('gemeente') || lower.includes('bijstand')) return documentExplanations['gemeente'];
-  return documentExplanations['default'];
-}
 
 // Parse profile info from user messages
 function parseProfileFromMessage(message: string, currentProfile: Partial<ParentProfile>): Partial<ParentProfile> {
@@ -84,6 +59,30 @@ function parseProfileFromMessage(message: string, currentProfile: Partial<Parent
   if (lower.includes('bills') || lower.includes('money') || lower.includes('ends meet')) updated.challenges = 'financial';
 
   return updated;
+}
+
+// Call AI API for response
+async function callAI(messages: { role: string; content: string }[], isDocument = false): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke('greenpt-chat', {
+      body: { messages, isDocument }
+    });
+
+    if (error) {
+      console.error('AI error:', error);
+      if (error.message?.includes('429')) {
+        toast.error('Too many requests. Please wait a moment.');
+      } else if (error.message?.includes('402')) {
+        toast.error('AI credits needed.');
+      }
+      return '';
+    }
+
+    return data?.choices?.[0]?.message?.content || '';
+  } catch (err) {
+    console.error('Failed to call AI:', err);
+    return '';
+  }
 }
 
 // Get conversation stage - we need at least 5 answered questions before matching
@@ -188,47 +187,19 @@ function generateLocalResponse(userMessage: string, profile: Partial<ParentProfi
   return { response, quickReplies, updatedProfile, shouldMatch };
 }
 
-// Call GreenPT API for AI response
-async function callGreenPT(messages: { role: string; content: string }[]): Promise<string> {
-  try {
-    const { data, error } = await supabase.functions.invoke('greenpt-chat', {
-      body: { messages }
-    });
-
-    if (error) {
-      console.error('GreenPT error:', error);
-      return '';
-    }
-
-    return data?.choices?.[0]?.message?.content || '';
-  } catch (err) {
-    console.error('Failed to call GreenPT:', err);
-    return '';
-  }
-}
-
 // Call benefits matching API
 async function callBenefitsMatch(profile: Partial<ParentProfile>): Promise<BenefitMatch[]> {
   try {
-    // Convert profile to the format expected by the matching API
     const monthlyIncome = typeof profile.monthlyIncome === 'number' ? profile.monthlyIncome : 2000;
     const matchProfile = {
-      personal: {
-        age: 30 // Default
-      },
-      financial: {
-        annualIncomeGross: monthlyIncome * 12
-      },
+      personal: { age: 30 },
+      financial: { annualIncomeGross: monthlyIncome * 12 },
       children: {
         numberOfChildren: profile.numberOfChildren || 0,
         age: Array.isArray(profile.childrenAges) ? profile.childrenAges[0] : 5
       },
-      housing: {
-        isRenting: profile.housingType === 'rent' || profile.housingType === 'social'
-      },
-      employment: {
-        isEmployed: profile.employmentStatus === 'employed' || profile.employmentStatus === 'part-time'
-      }
+      housing: { isRenting: profile.housingType === 'rent' || profile.housingType === 'social' },
+      employment: { isEmployed: profile.employmentStatus === 'employed' || profile.employmentStatus === 'part-time' }
     };
 
     const { data, error } = await supabase.functions.invoke('benefits-match', {
@@ -240,7 +211,6 @@ async function callBenefitsMatch(profile: Partial<ParentProfile>): Promise<Benef
       return [];
     }
 
-    // Transform to BenefitMatch format
     return (data?.matches || []).map((match: any) => ({
       benefit: {
         id: match.benefitId,
@@ -292,25 +262,20 @@ export function useChat() {
     const newHistory = [...conversationHistory, { role: 'user', content }];
     setConversationHistory(newHistory);
 
-    // Generate local response for structured flow
-    const { response: localResponse, quickReplies: newReplies, updatedProfile, shouldMatch } = 
-      generateLocalResponse(content, profile, messages.length);
-
-    // Try to get AI response for more natural conversation
-    let finalResponse = localResponse;
-    
-    // Only call AI for certain stages or when we need more nuanced responses
+    // Parse profile from user message
+    const updatedProfile = parseProfileFromMessage(content, profile);
+    const answeredCount = countAnsweredQuestions(updatedProfile);
     const stage = getStage(updatedProfile);
-    if (stage === 'ready' && !shouldMatch) {
-      const aiResponse = await callGreenPT(newHistory);
-      if (aiResponse) {
-        finalResponse = aiResponse;
-      }
-    }
+    const shouldMatch = stage === 'ready' && answeredCount >= 5;
 
+    // Call real AI for response
+    const aiResponse = await callAI(newHistory);
+    
     // Simulate natural typing delay
-    await new Promise(resolve => setTimeout(resolve, getTypingDelay(finalResponse)));
+    await new Promise(resolve => setTimeout(resolve, getTypingDelay(aiResponse || 'Thinking...')));
     setIsTyping(false);
+
+    const finalResponse = aiResponse || "I'm here to help. Tell me about your situation.";
 
     const assistantMessage: ChatMessage = {
       id: generateId(),
@@ -321,10 +286,13 @@ export function useChat() {
 
     setProfile(updatedProfile);
     setMessages(prev => [...prev, assistantMessage]);
-    setQuickReplies(newReplies);
     setConversationHistory(prev => [...prev, { role: 'assistant', content: finalResponse }]);
 
-    // If ready to match, call the benefits matching API (popups will appear automatically)
+    // Generate quick replies based on stage
+    const quickRepliesForStage = getQuickRepliesForStage(stage, updatedProfile);
+    setQuickReplies(quickRepliesForStage);
+
+    // If ready to match, call the benefits matching API
     if (shouldMatch) {
       setIsTyping(true);
       
@@ -333,34 +301,44 @@ export function useChat() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setIsTyping(false);
       
-      // Set matches - popups will be triggered in ChatView automatically
       setBenefitMatches(matches);
       
-      // Brief follow-up message (no benefit details in chat)
-      const followUp = matches.length > 0
-        ? `I found ${matches.length} options for you. Take a look!`
-        : `I'm still searching... Would you like to talk to a local worker who can help?`;
-      
-      const followUpMessage: ChatMessage = {
-        id: generateId(),
-        role: 'assistant',
-        content: followUp,
-        timestamp: new Date().toISOString(),
-        hasRecommendations: matches.length > 0,
-      };
-      
-      setMessages(prev => [...prev, followUpMessage]);
-      setQuickReplies(matches.length === 0 ? ['Yes, connect me', 'No thanks'] : []);
+      if (matches.length > 0) {
+        const followUp = `I found ${matches.length} options for you! Take a look.`;
+        const followUpMessage: ChatMessage = {
+          id: generateId(),
+          role: 'assistant',
+          content: followUp,
+          timestamp: new Date().toISOString(),
+          hasRecommendations: true,
+        };
+        setMessages(prev => [...prev, followUpMessage]);
+        setQuickReplies([]);
+      }
     }
 
     setIsLoading(false);
-  }, [profile, conversationHistory, messages.length]);
+  }, [profile, conversationHistory]);
+
+  // Helper to get quick replies based on conversation stage
+  function getQuickRepliesForStage(stage: Stage, profile: Partial<ParentProfile>): string[] {
+    switch (stage) {
+      case 'greeting': return ['Yes, I have children', 'No children'];
+      case 'children': return ['Baby/toddler (0-4)', 'School age (4-12)', 'Teenager (12-18)', 'Mixed ages'];
+      case 'ages': return ['Renting privately', 'Social housing', 'Own home', 'Living with family'];
+      case 'housing': return ['Under €1,500', '€1,500-2,500', '€2,500-3,500', 'Above €3,500'];
+      case 'income': return ['Full-time', 'Part-time', 'Looking for work', 'Studying', 'Unable to work'];
+      case 'employment': return ['Childcare costs', 'Healthcare expenses', 'Making ends meet', 'Everything feels hard'];
+      case 'ready': return [];
+      default: return [];
+    }
+  }
 
   const sendFile = useCallback(async (file: File) => {
     const userMessage: ChatMessage = {
       id: generateId(),
       role: 'user',
-      content: `📎 Shared: ${file.name}`,
+      content: `📎 Shared document: ${file.name}`,
       timestamp: new Date().toISOString(),
     };
 
@@ -369,24 +347,37 @@ export function useChat() {
     setIsTyping(true);
     setQuickReplies([]);
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const docExplanation = getDocumentExplanation(file.name);
+    // Create context for document analysis
+    const documentContext = `The user shared a document called "${file.name}". Based on common Dutch government documents, help them understand what this document likely is and what they should do.`;
     
-    await new Promise(resolve => setTimeout(resolve, getTypingDelay(docExplanation.explanation)));
+    const docHistory = [
+      ...conversationHistory,
+      { role: 'user', content: documentContext }
+    ];
+
+    // Call AI with document flag for specialized prompt
+    const aiResponse = await callAI(docHistory, true);
+    
+    await new Promise(resolve => setTimeout(resolve, getTypingDelay(aiResponse || 'Looking at your document...')));
     setIsTyping(false);
+
+    const explanation = aiResponse || "I see you've shared a document. Can you tell me a bit more about what it says or where it's from? I'll help you understand what it means.";
 
     const assistantMessage: ChatMessage = {
       id: generateId(),
       role: 'assistant',
-      content: docExplanation.explanation,
+      content: explanation,
       timestamp: new Date().toISOString(),
     };
 
     setMessages(prev => [...prev, assistantMessage]);
-    setQuickReplies(docExplanation.quickReplies);
+    setConversationHistory(prev => [...prev, 
+      { role: 'user', content: documentContext },
+      { role: 'assistant', content: explanation }
+    ]);
+    setQuickReplies(['What should I do next?', 'Is there a deadline?', 'Continue with benefits']);
     setIsLoading(false);
-  }, []);
+  }, [conversationHistory]);
 
   const addTaskForBenefit = useCallback((benefitId: string) => {
     // First check if it's from the API matches
