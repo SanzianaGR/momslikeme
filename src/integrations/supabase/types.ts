@@ -14,7 +14,161 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      benefits: {
+        Row: {
+          application_steps: Json | null
+          application_steps_nl: Json | null
+          application_url: string | null
+          benefit_id: string
+          created_at: string
+          description: string | null
+          description_nl: string | null
+          eligibility_logic: Json | null
+          eligibility_summary: Json | null
+          eligibility_summary_nl: Json | null
+          estimated_amount: string | null
+          estimated_amount_nl: string | null
+          icon: string | null
+          id: string
+          name: string
+          name_nl: string | null
+          provider: string | null
+          required_documents: Json | null
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_steps?: Json | null
+          application_steps_nl?: Json | null
+          application_url?: string | null
+          benefit_id: string
+          created_at?: string
+          description?: string | null
+          description_nl?: string | null
+          eligibility_logic?: Json | null
+          eligibility_summary?: Json | null
+          eligibility_summary_nl?: Json | null
+          estimated_amount?: string | null
+          estimated_amount_nl?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          name_nl?: string | null
+          provider?: string | null
+          required_documents?: Json | null
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_steps?: Json | null
+          application_steps_nl?: Json | null
+          application_url?: string | null
+          benefit_id?: string
+          created_at?: string
+          description?: string | null
+          description_nl?: string | null
+          eligibility_logic?: Json | null
+          eligibility_summary?: Json | null
+          eligibility_summary_nl?: Json | null
+          estimated_amount?: string | null
+          estimated_amount_nl?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          name_nl?: string | null
+          provider?: string | null
+          required_documents?: Json | null
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      post_replies: {
+        Row: {
+          author_id: string
+          author_name: string | null
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          upvoted_by: string[] | null
+          upvotes: number | null
+        }
+        Insert: {
+          author_id: string
+          author_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          upvoted_by?: string[] | null
+          upvotes?: number | null
+        }
+        Update: {
+          author_id?: string
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          upvoted_by?: string[] | null
+          upvotes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          author_name: string | null
+          content: string
+          created_at: string
+          downvoted_by: string[] | null
+          downvotes: number | null
+          id: string
+          score: number | null
+          title: string
+          updated_at: string
+          upvoted_by: string[] | null
+          upvotes: number | null
+        }
+        Insert: {
+          author_id: string
+          author_name?: string | null
+          content: string
+          created_at?: string
+          downvoted_by?: string[] | null
+          downvotes?: number | null
+          id?: string
+          score?: number | null
+          title: string
+          updated_at?: string
+          upvoted_by?: string[] | null
+          upvotes?: number | null
+        }
+        Update: {
+          author_id?: string
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          downvoted_by?: string[] | null
+          downvotes?: number | null
+          id?: string
+          score?: number | null
+          title?: string
+          updated_at?: string
+          upvoted_by?: string[] | null
+          upvotes?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
