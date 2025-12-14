@@ -18,45 +18,77 @@ function parseProfileFromMessage(message: string, currentProfile: Partial<Parent
   const lower = message.toLowerCase();
   const updated = { ...currentProfile };
 
-  // Children count
-  const numMatch = lower.match(/(\d+)\s*(child|kid|kinderen|children)/i) || lower.match(/i have (\d+)/i);
-  if (numMatch) updated.numberOfChildren = parseInt(numMatch[1]);
-  if (lower.includes('1 child') || lower.includes('one child')) updated.numberOfChildren = 1;
-  if (lower.includes('2 child') || lower.includes('two child')) updated.numberOfChildren = 2;
-  if (lower.includes('3') && lower.includes('more')) updated.numberOfChildren = 3;
+  // Children count - check specific button texts first
+  if (lower.includes('3 or more') || lower.includes('3+')) {
+    updated.numberOfChildren = 3;
+  } else if (lower.includes('2 child') || lower === '2 children') {
+    updated.numberOfChildren = 2;
+  } else if (lower.includes('1 child') || lower === '1 child' || lower.includes('one child')) {
+    updated.numberOfChildren = 1;
+  } else if (lower.includes('yes') && lower.includes('children')) {
+    updated.numberOfChildren = 1; // Default to 1 if they just say yes
+  }
+  const numMatch = lower.match(/(\d+)\s*(child|kid|kinderen|children)/i);
+  if (numMatch && !updated.numberOfChildren) {
+    updated.numberOfChildren = parseInt(numMatch[1]);
+  }
 
-  // Ages
-  if (lower.includes('baby') || lower.includes('toddler') || lower.includes('0-4')) updated.childrenAges = [2];
-  if (lower.includes('primary') || lower.includes('4-12') || lower.includes('school age')) updated.childrenAges = [8];
-  if (lower.includes('teen') || lower.includes('12-18')) updated.childrenAges = [14];
-  if (lower.includes('mixed')) updated.childrenAges = [4, 10];
+  // Ages - match exact button texts
+  if (lower.includes('baby') || lower.includes('toddler') || lower.includes('0-4')) {
+    updated.childrenAges = [2];
+  } else if (lower.includes('school age') || lower.includes('4-12')) {
+    updated.childrenAges = [8];
+  } else if (lower.includes('teen') || lower.includes('12-18')) {
+    updated.childrenAges = [14];
+  } else if (lower.includes('mixed')) {
+    updated.childrenAges = [4, 10];
+  }
 
-  // Housing
-  if (lower.includes('rent') && !lower.includes('social')) updated.housingType = 'rent';
-  if (lower.includes('social housing') || lower.includes('social')) updated.housingType = 'social';
-  if (lower.includes('own') || lower.includes('bought')) updated.housingType = 'own';
-  if (lower.includes('family') || lower.includes('parents')) updated.housingType = 'family';
+  // Housing - match exact button texts
+  if (lower.includes('renting privately') || (lower.includes('rent') && !lower.includes('social'))) {
+    updated.housingType = 'rent';
+  } else if (lower.includes('social housing') || lower.includes('social')) {
+    updated.housingType = 'social';
+  } else if (lower.includes('own home') || lower.includes('own')) {
+    updated.housingType = 'own';
+  } else if (lower.includes('living with family') || lower.includes('family')) {
+    updated.housingType = 'family';
+  }
 
-  // Income
-  if (lower.includes('under') || lower.includes('1500') || lower.includes('low income')) updated.monthlyIncome = 1200;
-  if (lower.includes('1500-2500') || lower.includes('medium') || lower.includes('middle')) updated.monthlyIncome = 2000;
-  if (lower.includes('2500-3500')) updated.monthlyIncome = 3000;
-  if (lower.includes('above 3500') || lower.includes('high')) updated.monthlyIncome = 4000;
+  // Income - MUST check more specific patterns FIRST (order matters!)
+  if (lower.includes('above') || lower.includes('€3,500') || lower.includes('3500+')) {
+    updated.monthlyIncome = 4000;
+  } else if (lower.includes('2,500-3,500') || lower.includes('2500-3500')) {
+    updated.monthlyIncome = 3000;
+  } else if (lower.includes('1,500-2,500') || lower.includes('1500-2500')) {
+    updated.monthlyIncome = 2000;
+  } else if (lower.includes('under') || lower.includes('under €1,500') || lower.includes('€1,500') && !lower.includes('-')) {
+    updated.monthlyIncome = 1200;
+  }
 
-  // Employment
-  if (lower.includes('full-time') || lower.includes('fulltime')) updated.employmentStatus = 'employed';
-  if (lower.includes('part-time') || lower.includes('parttime')) updated.employmentStatus = 'part-time';
-  if (lower.includes('looking') || lower.includes('unemployed') || lower.includes('job hunting')) updated.employmentStatus = 'unemployed';
-  if (lower.includes('study') || lower.includes('student')) updated.employmentStatus = 'student';
-  if (lower.includes('unable') || lower.includes('disabled') || lower.includes('sick')) updated.employmentStatus = 'unable';
-  if (lower.includes('self-employed') || lower.includes('freelance')) updated.employmentStatus = 'self-employed';
+  // Employment - match exact button texts
+  if (lower.includes('full-time') || lower.includes('fulltime')) {
+    updated.employmentStatus = 'employed';
+  } else if (lower.includes('part-time') || lower.includes('parttime')) {
+    updated.employmentStatus = 'part-time';
+  } else if (lower.includes('looking for work') || lower.includes('looking')) {
+    updated.employmentStatus = 'unemployed';
+  } else if (lower.includes('studying') || lower.includes('study') || lower.includes('student')) {
+    updated.employmentStatus = 'student';
+  } else if (lower.includes('unable to work') || lower.includes('unable')) {
+    updated.employmentStatus = 'unable';
+  }
 
-  // Challenges
-  if (lower.includes('childcare') || lower.includes('opvang')) updated.challenges = 'childcare';
-  if (lower.includes('healthcare') || lower.includes('medical') || lower.includes('insurance')) updated.challenges = 'healthcare';
-  if (lower.includes('school') || lower.includes('education')) updated.challenges = 'education';
-  if (lower.includes('everything') || lower.includes('overwhelming')) updated.challenges = 'multiple';
-  if (lower.includes('bills') || lower.includes('money') || lower.includes('ends meet')) updated.challenges = 'financial';
+  // Challenges - match exact button texts
+  if (lower.includes('childcare cost') || lower.includes('childcare')) {
+    updated.challenges = 'childcare';
+  } else if (lower.includes('healthcare expense') || lower.includes('healthcare')) {
+    updated.challenges = 'healthcare';
+  } else if (lower.includes('making ends meet') || lower.includes('ends meet')) {
+    updated.challenges = 'financial';
+  } else if (lower.includes('everything feels') || lower.includes('everything')) {
+    updated.challenges = 'multiple';
+  }
 
   return updated;
 }
