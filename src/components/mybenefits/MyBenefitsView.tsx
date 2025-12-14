@@ -75,89 +75,162 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
   const handleDownloadPDF = () => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 20;
     const contentWidth = pageWidth - margin * 2;
-    let yPos = 20;
+    let yPos = margin;
+
+    // Colors
+    const primaryColor: [number, number, number] = [111, 175, 142]; // Forest green
+    const textColor: [number, number, number] = [46, 42, 39]; // Dark charcoal
+    const mutedColor: [number, number, number] = [120, 120, 120];
+    const accentColor: [number, number, number] = [242, 166, 90]; // Warm apricot
 
     // Helper to add new page if needed
     const checkNewPage = (neededHeight: number) => {
-      if (yPos + neededHeight > pdf.internal.pageSize.getHeight() - 20) {
+      if (yPos + neededHeight > pageHeight - 30) {
+        // Add page number before new page
+        pdf.setFontSize(8);
+        pdf.setTextColor(...mutedColor);
+        pdf.text(`momslikeme - ${t.pdfTitle}`, margin, pageHeight - 10);
+        pdf.text(pdf.internal.pages.length.toString(), pageWidth - margin, pageHeight - 10, { align: 'right' });
+        
         pdf.addPage();
-        yPos = 20;
+        yPos = margin;
       }
     };
 
+    // ===== HEADER SECTION =====
+    // Header background
+    pdf.setFillColor(...primaryColor);
+    pdf.rect(0, 0, pageWidth, 45, 'F');
+    
     // Title
-    pdf.setFontSize(24);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(28);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('momslikeme', margin, yPos);
-    yPos += 10;
+    pdf.text('momslikeme', margin, 25);
     
-    pdf.setFontSize(16);
-    pdf.text(t.pdfTitle, margin, yPos);
-    yPos += 8;
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(t.pdfTitle, margin, 37);
     
+    yPos = 60;
+
+    // Date and summary
+    pdf.setTextColor(...textColor);
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`${t.pdfGenerated}: ${new Date().toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US')}`, margin, yPos);
+    const dateStr = new Date().toLocaleDateString(language === 'nl' ? 'nl-NL' : 'en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    pdf.text(`${t.pdfGenerated}: ${dateStr}`, margin, yPos);
+    yPos += 8;
+    
+    // Benefits count
+    const totalAmount = tasks.reduce((sum, task) => {
+      const amount = task.estimatedAmount?.replace(/[^0-9]/g, '') || '0';
+      return sum + parseInt(amount, 10);
+    }, 0);
+    
+    pdf.setFontSize(11);
+    pdf.text(language === 'nl' 
+      ? `${tasks.length} regelingen gevonden` 
+      : `${tasks.length} benefits found`, margin, yPos);
+    if (totalAmount > 0) {
+      pdf.text(language === 'nl' 
+        ? `Geschatte totale waarde: €${totalAmount.toLocaleString()}+`
+        : `Estimated total value: €${totalAmount.toLocaleString()}+`, pageWidth - margin, yPos, { align: 'right' });
+    }
     yPos += 15;
 
-    // Motivational line
+    // Motivational quote box
+    pdf.setFillColor(251, 247, 242); // Warm cream
+    pdf.setDrawColor(...primaryColor);
+    pdf.roundedRect(margin, yPos, contentWidth, 18, 3, 3, 'FD');
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'italic');
-    pdf.text(t.youDeserve, margin, yPos);
-    yPos += 15;
+    pdf.setTextColor(...primaryColor);
+    pdf.text(`"${t.youDeserve}"`, pageWidth / 2, yPos + 11, { align: 'center' });
+    yPos += 28;
 
-    // Each benefit
+    // Divider
+    pdf.setDrawColor(220, 220, 220);
+    pdf.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+
+    // ===== BENEFITS SECTION =====
     tasks.forEach((task, index) => {
       const benefitFull = getBenefitDetails(task.benefitId);
       const name = language === 'nl' ? (task.titleNl || task.title) : task.title;
       const description = language === 'nl' ? (task.descriptionNl || task.description) : task.description;
       
-      checkNewPage(60);
+      checkNewPage(70);
 
-      // Benefit header
+      // Benefit number badge
+      pdf.setFillColor(...accentColor);
+      pdf.circle(margin + 5, yPos + 3, 5, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text((index + 1).toString(), margin + 5, yPos + 5.5, { align: 'center' });
+
+      // Benefit name
+      pdf.setTextColor(...textColor);
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`${index + 1}. ${name}`, margin, yPos);
-      yPos += 7;
+      pdf.text(name, margin + 15, yPos + 5);
+      yPos += 12;
 
-      // Amount
+      // Amount badge
       if (task.estimatedAmount) {
-        pdf.setFontSize(11);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(`${t.amount}: ${task.estimatedAmount}`, margin + 5, yPos);
-        yPos += 6;
+        pdf.setFillColor(200, 230, 200);
+        const amountText = `${t.amount}: ${task.estimatedAmount}`;
+        const amountWidth = pdf.getTextWidth(amountText) + 8;
+        pdf.roundedRect(margin + 15, yPos - 3, amountWidth, 8, 2, 2, 'F');
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(50, 120, 50);
+        pdf.text(amountText, margin + 19, yPos + 2);
+        yPos += 10;
       }
 
       // Description
       if (description) {
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'normal');
-        const descLines = pdf.splitTextToSize(description, contentWidth - 10);
-        pdf.text(descLines, margin + 5, yPos);
+        pdf.setTextColor(...mutedColor);
+        const descLines = pdf.splitTextToSize(description, contentWidth - 20);
+        checkNewPage(descLines.length * 5);
+        pdf.text(descLines, margin + 15, yPos);
         yPos += descLines.length * 5 + 5;
       }
 
-      // Required documents
+      // Required documents section
       const requiredDocs = benefitFull
         ? (language === 'nl' ? (benefitFull.requiredDocumentsNl || benefitFull.requiredDocuments) : benefitFull.requiredDocuments)
         : [];
       
       if (requiredDocs.length > 0) {
-        checkNewPage(20 + requiredDocs.length * 5);
-        pdf.setFontSize(11);
+        checkNewPage(15 + requiredDocs.length * 6);
+        pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
-        pdf.text(t.pdfDocuments + ':', margin + 5, yPos);
-        yPos += 5;
+        pdf.setTextColor(...textColor);
+        pdf.text(t.pdfDocuments + ':', margin + 15, yPos);
+        yPos += 6;
         
         pdf.setFontSize(9);
         pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(...mutedColor);
         requiredDocs.forEach(doc => {
-          const docLines = pdf.splitTextToSize(`- ${doc}`, contentWidth - 15);
-          checkNewPage(docLines.length * 4);
-          pdf.text(docLines, margin + 10, yPos);
-          yPos += docLines.length * 4 + 1;
+          checkNewPage(6);
+          pdf.text('•', margin + 18, yPos);
+          const docLines = pdf.splitTextToSize(doc, contentWidth - 30);
+          pdf.text(docLines, margin + 24, yPos);
+          yPos += docLines.length * 4 + 2;
         });
         yPos += 3;
       }
@@ -168,19 +241,24 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
         : [];
       
       if (howToApply.length > 0) {
-        checkNewPage(15 + howToApply.length * 5);
-        pdf.setFontSize(11);
+        checkNewPage(15 + howToApply.length * 6);
+        pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
-        pdf.text(t.pdfSteps + ':', margin + 5, yPos);
-        yPos += 5;
+        pdf.setTextColor(...textColor);
+        pdf.text(t.pdfSteps + ':', margin + 15, yPos);
+        yPos += 6;
         
         pdf.setFontSize(9);
         pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(...mutedColor);
         howToApply.forEach((step, i) => {
-          const stepLines = pdf.splitTextToSize(`${i + 1}. ${step}`, contentWidth - 15);
-          checkNewPage(stepLines.length * 4);
-          pdf.text(stepLines, margin + 10, yPos);
-          yPos += stepLines.length * 4 + 1;
+          checkNewPage(6);
+          pdf.setTextColor(...primaryColor);
+          pdf.text(`${i + 1}.`, margin + 18, yPos);
+          pdf.setTextColor(...mutedColor);
+          const stepLines = pdf.splitTextToSize(step, contentWidth - 35);
+          pdf.text(stepLines, margin + 26, yPos);
+          yPos += stepLines.length * 4 + 2;
         });
         yPos += 3;
       }
@@ -188,38 +266,64 @@ export function MyBenefitsView({ tasks, onToggleStep, language }: MyBenefitsView
       // Official website
       const officialUrl = benefitFull?.officialWebsite || task.applicationUrl;
       if (officialUrl) {
-        checkNewPage(10);
+        checkNewPage(12);
         pdf.setFontSize(9);
         pdf.setFont('helvetica', 'bold');
-        pdf.text(`${t.pdfWebsite}: `, margin + 5, yPos);
+        pdf.setTextColor(...textColor);
+        pdf.text(`${t.pdfWebsite}:`, margin + 15, yPos);
         pdf.setFont('helvetica', 'normal');
         pdf.setTextColor(0, 102, 204);
-        pdf.text(officialUrl, margin + 5 + pdf.getTextWidth(`${t.pdfWebsite}: `), yPos);
-        pdf.setTextColor(0, 0, 0);
-        yPos += 10;
+        pdf.textWithLink(officialUrl, margin + 15 + pdf.getTextWidth(`${t.pdfWebsite}: `), yPos, { url: officialUrl });
+        yPos += 8;
       }
 
-      yPos += 10;
+      // Divider between benefits
+      if (index < tasks.length - 1) {
+        yPos += 5;
+        pdf.setDrawColor(230, 230, 230);
+        pdf.setLineDashPattern([2, 2], 0);
+        pdf.line(margin + 15, yPos, pageWidth - margin, yPos);
+        pdf.setLineDashPattern([], 0);
+        yPos += 10;
+      }
     });
 
-    // Footer with help info
-    checkNewPage(30);
-    yPos += 5;
-    pdf.setDrawColor(200, 200, 200);
-    pdf.line(margin, yPos, pageWidth - margin, yPos);
+    // ===== FOOTER SECTION =====
+    checkNewPage(50);
     yPos += 10;
     
+    // Help section box
+    pdf.setFillColor(251, 247, 242);
+    pdf.setDrawColor(...primaryColor);
+    pdf.roundedRect(margin, yPos, contentWidth, 35, 3, 3, 'FD');
+    
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...primaryColor);
+    pdf.text(t.needHelp, margin + 8, yPos + 10);
+    
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(...mutedColor);
+    const helpLines = pdf.splitTextToSize(t.helpText, contentWidth - 16);
+    pdf.text(helpLines, margin + 8, yPos + 18);
+    
+    yPos += 45;
+    
+    // Free support message
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(t.needHelp, margin, yPos);
-    yPos += 5;
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
-    const helpLines = pdf.splitTextToSize(t.helpText, contentWidth);
-    pdf.text(helpLines, margin, yPos);
+    pdf.setTextColor(...primaryColor);
+    pdf.text(t.freeSupport, pageWidth / 2, yPos, { align: 'center' });
+
+    // Final page number
+    pdf.setFontSize(8);
+    pdf.setTextColor(...mutedColor);
+    pdf.text(`momslikeme - ${t.pdfTitle}`, margin, pageHeight - 10);
+    pdf.text(pdf.internal.pages.length.toString(), pageWidth - margin, pageHeight - 10, { align: 'right' });
 
     // Save
-    pdf.save('momslikeme-benefits.pdf');
+    pdf.save('momslikeme-benefits-report.pdf');
   };
 
   const handleSendEmail = () => {
