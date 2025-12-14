@@ -1,62 +1,97 @@
 import { useState, useCallback } from 'react';
 import { ChatMessage, ParentProfile, BenefitMatch, Task } from '@/types';
-import { parseProfileFromConversation, calculateBenefitMatches } from '@/lib/matching';
+import { supabase } from '@/integrations/supabase/client';
 import { getBenefitById } from '@/data/benefits';
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
 // Simulate typing delay based on message length
 const getTypingDelay = (text: string): number => {
-  const baseDelay = 400;
-  const perCharDelay = 15;
-  return Math.min(baseDelay + text.length * perCharDelay, 2500);
+  const baseDelay = 300;
+  const perCharDelay = 12;
+  return Math.min(baseDelay + text.length * perCharDelay, 2000);
 };
 
-// Hardcoded document explanations
+// Document explanations for file uploads
 const documentExplanations: Record<string, { title: string; explanation: string; quickReplies: string[] }> = {
-  'pdf': {
-    title: 'Document Analysis',
-    explanation: `I can see this looks like a government letter or official document! 📄\n\nHere's what I notice:\n• This appears to be related to benefits or taxes\n• There might be important deadlines mentioned\n• You may need to take action or respond\n\nWould you like me to help you understand what action might be needed?`,
-    quickReplies: ['What should I do next?', 'Is this about a benefit?', 'Help me respond to this']
-  },
   'belastingdienst': {
     title: 'Tax Office Letter',
-    explanation: `This looks like a letter from the Belastingdienst (Tax Office)! 📋\n\n**In simple terms:**\n• The Tax Office handles things like toeslagen (benefits) and taxes\n• This letter might be about your zorgtoeslag, huurtoeslag, or kinderopvangtoeslag\n• Don't worry — I can help you understand what it means!\n\nThe most important thing is to check if there's a deadline (usually shown at the top of the letter).`,
-    quickReplies: ['Is there a deadline?', 'What benefits is this about?', 'Help me understand the amounts']
+    explanation: `This looks like a letter from the Belastingdienst! It might be about your toeslagen. Check if there's a deadline at the top.`,
+    quickReplies: ['What does it mean?', 'Is there a deadline?', 'Help me respond']
   },
   'gemeente': {
     title: 'Municipality Letter', 
-    explanation: `This appears to be from your gemeente (municipality)! 🏛️\n\n**What this usually means:**\n• Your local gemeente handles things like bijzondere bijstand (special assistance)\n• They might be asking for more information or confirming something\n• Municipal letters often have local support options\n\nRemember: your gemeente wants to help! They have many local programs available.`,
-    quickReplies: ['What local help is available?', 'Do I need to respond?', 'Tell me about bijzondere bijstand']
+    explanation: `This is from your gemeente. They might be asking for info or confirming something about local support.`,
+    quickReplies: ['What should I do?', 'Is this about benefits?']
   },
   'default': {
     title: 'Document Received',
-    explanation: `Thank you for sharing this document with me! 📄\n\n**Here's what I can help with:**\n• Understanding official language in plain Dutch/English\n• Identifying what action you might need to take\n• Finding benefits or support related to this document\n\nCould you tell me a bit more about what this document is about, or what concerns you have about it?`,
-    quickReplies: ['What does this mean?', 'Do I need to do anything?', 'Is this about money I could receive?']
+    explanation: `Thanks for sharing! Tell me what this document is about and I'll help you understand it.`,
+    quickReplies: ['What does this mean?', 'Do I need to respond?']
   }
 };
 
-// Get document explanation based on filename
-function getDocumentExplanation(filename: string): { title: string; explanation: string; quickReplies: string[] } {
+function getDocumentExplanation(filename: string) {
   const lower = filename.toLowerCase();
-  if (lower.includes('belasting') || lower.includes('toeslag') || lower.includes('tax')) {
-    return documentExplanations['belastingdienst'];
-  }
-  if (lower.includes('gemeente') || lower.includes('municipal') || lower.includes('bijstand')) {
-    return documentExplanations['gemeente'];
-  }
-  if (lower.includes('.pdf')) {
-    return documentExplanations['pdf'];
-  }
+  if (lower.includes('belasting') || lower.includes('toeslag')) return documentExplanations['belastingdienst'];
+  if (lower.includes('gemeente') || lower.includes('bijstand')) return documentExplanations['gemeente'];
   return documentExplanations['default'];
 }
 
-// Conversation stage tracking
-type ConversationStage = 'greeting' | 'children' | 'ages' | 'housing' | 'income' | 'employment' | 'challenges' | 'ready';
+// Parse profile info from user messages
+function parseProfileFromMessage(message: string, currentProfile: Partial<ParentProfile>): Partial<ParentProfile> {
+  const lower = message.toLowerCase();
+  const updated = { ...currentProfile };
 
-function getConversationStage(profile: Partial<ParentProfile>): ConversationStage {
+  // Children count
+  const numMatch = lower.match(/(\d+)\s*(child|kid|kinderen|children)/i) || lower.match(/i have (\d+)/i);
+  if (numMatch) updated.numberOfChildren = parseInt(numMatch[1]);
+  if (lower.includes('1 child') || lower.includes('one child')) updated.numberOfChildren = 1;
+  if (lower.includes('2 child') || lower.includes('two child')) updated.numberOfChildren = 2;
+  if (lower.includes('3') && lower.includes('more')) updated.numberOfChildren = 3;
+
+  // Ages
+  if (lower.includes('baby') || lower.includes('toddler') || lower.includes('0-4')) updated.childrenAges = [2];
+  if (lower.includes('primary') || lower.includes('4-12') || lower.includes('school age')) updated.childrenAges = [8];
+  if (lower.includes('teen') || lower.includes('12-18')) updated.childrenAges = [14];
+  if (lower.includes('mixed')) updated.childrenAges = [4, 10];
+
+  // Housing
+  if (lower.includes('rent') && !lower.includes('social')) updated.housingType = 'rent';
+  if (lower.includes('social housing') || lower.includes('social')) updated.housingType = 'social';
+  if (lower.includes('own') || lower.includes('bought')) updated.housingType = 'own';
+  if (lower.includes('family') || lower.includes('parents')) updated.housingType = 'family';
+
+  // Income
+  if (lower.includes('under') || lower.includes('1500') || lower.includes('low income')) updated.monthlyIncome = 1200;
+  if (lower.includes('1500-2500') || lower.includes('medium') || lower.includes('middle')) updated.monthlyIncome = 2000;
+  if (lower.includes('2500-3500')) updated.monthlyIncome = 3000;
+  if (lower.includes('above 3500') || lower.includes('high')) updated.monthlyIncome = 4000;
+
+  // Employment
+  if (lower.includes('full-time') || lower.includes('fulltime')) updated.employmentStatus = 'employed';
+  if (lower.includes('part-time') || lower.includes('parttime')) updated.employmentStatus = 'part-time';
+  if (lower.includes('looking') || lower.includes('unemployed') || lower.includes('job hunting')) updated.employmentStatus = 'unemployed';
+  if (lower.includes('study') || lower.includes('student')) updated.employmentStatus = 'student';
+  if (lower.includes('unable') || lower.includes('disabled') || lower.includes('sick')) updated.employmentStatus = 'unable';
+  if (lower.includes('self-employed') || lower.includes('freelance')) updated.employmentStatus = 'self-employed';
+
+  // Challenges
+  if (lower.includes('childcare') || lower.includes('opvang')) updated.challenges = 'childcare';
+  if (lower.includes('healthcare') || lower.includes('medical') || lower.includes('insurance')) updated.challenges = 'healthcare';
+  if (lower.includes('school') || lower.includes('education')) updated.challenges = 'education';
+  if (lower.includes('everything') || lower.includes('overwhelming')) updated.challenges = 'multiple';
+  if (lower.includes('bills') || lower.includes('money') || lower.includes('ends meet')) updated.challenges = 'financial';
+
+  return updated;
+}
+
+// Get conversation stage
+type Stage = 'greeting' | 'children' | 'ages' | 'housing' | 'income' | 'employment' | 'challenges' | 'ready';
+
+function getStage(profile: Partial<ParentProfile>): Stage {
   if (!profile.numberOfChildren) return 'greeting';
-  if (!profile.childrenAges) return 'children';
+  if (!profile.childrenAges || profile.childrenAges.length === 0) return 'children';
   if (!profile.housingType) return 'ages';
   if (!profile.monthlyIncome) return 'housing';
   if (!profile.employmentStatus) return 'income';
@@ -64,204 +99,147 @@ function getConversationStage(profile: Partial<ParentProfile>): ConversationStag
   return 'ready';
 }
 
-// Warm, empathetic responses that build trust before recommending
-function generateResponse(userMessage: string, profile: Partial<ParentProfile>, messageCount: number): {
+// Generate concise responses based on stage
+function generateLocalResponse(userMessage: string, profile: Partial<ParentProfile>, messageCount: number): {
   response: string;
   quickReplies: string[];
   updatedProfile: Partial<ParentProfile>;
-  shouldShowBenefits: boolean;
+  shouldMatch: boolean;
 } {
+  const updatedProfile = parseProfileFromMessage(userMessage, profile);
+  const stage = getStage(updatedProfile);
   const lower = userMessage.toLowerCase();
-  const updatedProfile = { ...profile, ...parseProfileFromConversation(userMessage) };
-  
-  const rawConvo = `${profile.rawConversation || ''}\nUser: ${userMessage}`;
-  updatedProfile.rawConversation = rawConvo;
 
   let response = '';
   let quickReplies: string[] = [];
-  let shouldShowBenefits = false;
+  let shouldMatch = false;
 
-  const stage = getConversationStage(updatedProfile);
-
-  // First message - warm welcome
-  if (messageCount === 0 || stage === 'greeting') {
-    // Check if they mentioned children
-    const numMatch = lower.match(/(\d+)\s*(child|kid|kinderen)/i) || lower.match(/i have (\d+)/i);
-    if (numMatch) {
-      const num = parseInt(numMatch[1]);
-      updatedProfile.numberOfChildren = num;
-      response = `${num === 1 ? 'One little one' : `${num} little ones`} — you must have your hands full! I really appreciate you sharing that with me.\n\nBefore we look at what support might be available, I'd love to understand your situation a bit better. It helps me find the things that are actually relevant to you.\n\nHow old ${num === 1 ? 'is your child' : 'are your children'}?`;
-      quickReplies = ['Baby/toddler (0-4)', 'Primary school (4-12)', 'Teenager (12-18)', 'Mixed ages'];
-    } else if (lower.includes('new') || lower.includes('nieuw') || lower.includes('start')) {
-      response = `Welcome! I'm Bloom, and I'm here to help you navigate the maze of support that's available in the Netherlands.\n\nI know it can feel overwhelming — there are so many different "potjes" (funds) and it's hard to know what you might qualify for. That's exactly why I'm here.\n\nLet's start simple: do you have children?`;
-      quickReplies = ['Yes, I have children', 'No children', 'I\'m expecting'];
-    } else if (lower.includes('children') || lower.includes('child') || lower.includes('kinderen')) {
-      response = `It sounds like you have little ones! That's wonderful.\n\nThere's actually quite a lot of support available for parents in the Netherlands — from childcare benefits to school supplies funds. But first, let me get to know your situation a bit.\n\nHow many children do you have?`;
-      quickReplies = ['1 child', '2 children', '3 or more'];
-    } else if (lower.includes('housing') || lower.includes('rent') || lower.includes('huur') || lower.includes('woon')) {
-      response = `Housing costs can be one of the biggest expenses — I hear you. The good news is there's help available.\n\nBut let me understand your full picture first so I can really help. Tell me, do you have children?`;
-      quickReplies = ['Yes, I have children', 'No children'];
-    } else if (lower.includes('healthcare') || lower.includes('gezond') || lower.includes('zorg')) {
-      response = `Healthcare costs are a real concern for many families. The zorgtoeslag (healthcare allowance) can help, but there might be more support available depending on your situation.\n\nLet me learn a bit about you first. Do you have children?`;
-      quickReplies = ['Yes, I have children', 'No children'];
-    } else {
-      response = `Hi there! I'm Bloom, your friendly guide to finding support in the Netherlands.\n\nI know dealing with government systems and applications can feel scary — especially after everything that's happened. But I'm here to help, and everything you share stays completely private.\n\nLet's start with a simple question: do you have children?`;
-      quickReplies = ['Yes, I have children', 'No children', 'I\'m expecting'];
-    }
-    return { response, quickReplies, updatedProfile, shouldShowBenefits: false };
-  }
-
-  // Stage: Just learned about children, asking for ages
-  if (stage === 'children') {
-    const numMatch = lower.match(/(\d+)/);
-    if (numMatch) {
-      updatedProfile.numberOfChildren = parseInt(numMatch[1]);
-    }
-    
-    if (lower.includes('baby') || lower.includes('toddler') || lower.includes('0-4') || lower.includes('under 4')) {
-      updatedProfile.childrenAges = 'young';
-      response = `Little ones under 4 — such a precious but exhausting time! You're doing amazing.\n\nChildcare at this age can be expensive, but there's good support available. I'll keep that in mind.\n\nNow, can you tell me about your living situation? Are you renting, or do you own your home?`;
-      quickReplies = ['I rent privately', 'Social housing', 'I own my home', 'Living with family'];
-    } else if (lower.includes('primary') || lower.includes('school') || lower.includes('4-12')) {
-      updatedProfile.childrenAges = 'school';
-      response = `School-age children! Between school runs, homework, and after-school activities, I'm sure you're busy.\n\nThere are specific funds for school costs, activities, and even laptops. Good to know!\n\nWhat's your housing situation like? Are you renting or do you own?`;
-      quickReplies = ['I rent privately', 'Social housing', 'I own my home', 'Living with family'];
-    } else if (lower.includes('teen') || lower.includes('12-18') || lower.includes('older')) {
-      updatedProfile.childrenAges = 'teen';
-      response = `Teenagers — a whole different adventure! They have their own needs, and costs can actually go up as they get older.\n\nThere are funds specifically for teens, including for education and activities. I'll remember that.\n\nTell me about where you live — are you renting or do you own your home?`;
-      quickReplies = ['I rent privately', 'Social housing', 'I own my home', 'Living with family'];
-    } else if (lower.includes('mixed') || lower.includes('different ages')) {
-      updatedProfile.childrenAges = 'mixed';
-      response = `A mix of ages — so you're juggling different needs all at once! That takes real skill.\n\nThe good news is there might be multiple types of support for different ages. I'll look at all of them.\n\nWhat about your housing? Do you rent or own?`;
-      quickReplies = ['I rent privately', 'Social housing', 'I own my home'];
-    } else {
-      response = `Thanks for sharing! To help me understand what support might fit your family, could you tell me roughly how old your children are?`;
-      quickReplies = ['Baby/toddler (0-4)', 'Primary school (4-12)', 'Teenager (12-18)', 'Mixed ages'];
-    }
-    return { response, quickReplies, updatedProfile, shouldShowBenefits: false };
-  }
-
-  // Stage: Asking about housing
-  if (stage === 'ages') {
-    if (lower.includes('rent') || lower.includes('huur')) {
-      updatedProfile.housingType = lower.includes('social') ? 'social' : 'rent';
-      response = `Got it — ${lower.includes('social') ? 'social housing' : 'renting'}. Housing costs are often the biggest monthly expense, so this is really important information.\n\n${lower.includes('social') ? 'Social housing usually means lower rent, which is good!' : 'Private rent can be expensive, but there\'s help available like huurtoeslag (rent benefit).'}\n\nNow, can I ask — roughly what's your household income each month? Don't worry about exact numbers, a rough range helps.`;
-      quickReplies = ['Under €1,500/month', '€1,500-2,500/month', '€2,500-3,500/month', 'Above €3,500/month'];
-    } else if (lower.includes('own') || lower.includes('koop') || lower.includes('bought')) {
-      updatedProfile.housingType = 'own';
-      response = `You own your home — that's great! While some rental benefits won't apply, there are still many other forms of support available.\n\nCan I ask about your household income? A rough range is fine — this helps me understand which benefits might be relevant.`;
-      quickReplies = ['Under €1,500/month', '€1,500-2,500/month', '€2,500-3,500/month', 'Above €3,500/month'];
-    } else if (lower.includes('family') || lower.includes('parents') || lower.includes('living with')) {
-      updatedProfile.housingType = 'family';
-      response = `Living with family can be a practical choice, especially when times are tough. It's nothing to be ashamed of.\n\nSome benefits are calculated differently when you share housing. Let me note that down.\n\nWhat about income — roughly how much does your household bring in each month?`;
-      quickReplies = ['Under €1,500/month', '€1,500-2,500/month', '€2,500-3,500/month', 'Above €3,500/month'];
-    } else {
-      response = `Thanks! To help me find the right support, could you tell me about your housing situation?`;
-      quickReplies = ['I rent privately', 'Social housing', 'I own my home', 'Living with family'];
-    }
-    return { response, quickReplies, updatedProfile, shouldShowBenefits: false };
-  }
-
-  // Stage: Asking about income
-  if (stage === 'housing') {
-    if (lower.includes('under') || lower.includes('1500') || lower.includes('1,500') || lower.includes('low')) {
-      updatedProfile.monthlyIncome = 'low';
-      response = `I appreciate you sharing that — I know it's not always easy to talk about. Many families are in similar situations, and there's no shame in needing support.\n\nThe good news is that at this income level, you likely qualify for quite a few benefits. But let me ask one more thing first.\n\nAre you currently working, looking for work, or perhaps studying?`;
-      quickReplies = ['Working full-time', 'Working part-time', 'Looking for work', 'Studying', 'Unable to work'];
-    } else if (lower.includes('2500') || lower.includes('2,500') || lower.includes('middle') || lower.includes('medium')) {
-      updatedProfile.monthlyIncome = 'medium';
-      response = `Thank you for sharing. At this income level, you might still qualify for several benefits — especially with children.\n\nMany people don't realize they're eligible until they check. That's exactly why I'm here!\n\nAre you currently working, studying, or something else?`;
-      quickReplies = ['Working full-time', 'Working part-time', 'Looking for work', 'Studying'];
-    } else if (lower.includes('3500') || lower.includes('3,500') || lower.includes('above') || lower.includes('high')) {
-      updatedProfile.monthlyIncome = 'high';
-      response = `Thanks for being open with me. Even at higher income levels, there are still family-specific benefits you might qualify for — like kinderbijslag, which everyone with children gets regardless of income.\n\nAre you working, studying, or in another situation?`;
-      quickReplies = ['Working full-time', 'Working part-time', 'Self-employed', 'Studying'];
-    } else {
-      response = `No worries if you're not sure of the exact amount! Just a rough idea helps me understand which benefits might be relevant. What would you estimate?`;
-      quickReplies = ['Under €1,500/month', '€1,500-2,500/month', '€2,500-3,500/month', 'Above €3,500/month'];
-    }
-    return { response, quickReplies, updatedProfile, shouldShowBenefits: false };
-  }
-
-  // Stage: Asking about employment
-  if (stage === 'income') {
-    if (lower.includes('full-time') || lower.includes('full time') || lower.includes('fulltime')) {
-      updatedProfile.employmentStatus = 'employed';
-      response = `Working full-time while raising children — that takes real strength. You should be proud of yourself.\n\nOne more question, and then I can start looking at what might help you.\n\nWhat's the biggest challenge you're facing right now? Is it childcare costs, healthcare, housing, or something else?`;
-      quickReplies = ['Childcare costs', 'Healthcare/insurance', 'Making ends meet', 'School costs', 'Everything feels hard'];
-    } else if (lower.includes('part-time') || lower.includes('part time') || lower.includes('parttime')) {
-      updatedProfile.employmentStatus = 'part-time';
-      response = `Part-time work often makes the most sense when you have children to care for. It's a valid choice.\n\nWorking part-time can actually open up more benefit options. Let me ask one more thing:\n\nWhat's your biggest challenge right now?`;
-      quickReplies = ['Childcare costs', 'Finding more hours', 'Making ends meet', 'School costs', 'Everything feels hard'];
-    } else if (lower.includes('looking') || lower.includes('unemployed') || lower.includes('zoek')) {
-      updatedProfile.employmentStatus = 'unemployed';
-      response = `Looking for work while managing a family is incredibly tough. Please don't be hard on yourself.\n\nThere are specific benefits for people in your situation, and I want to help you find them.\n\nWhat feels like the biggest struggle right now?`;
-      quickReplies = ['Paying the bills', 'Childcare while job hunting', 'Healthcare costs', 'Everything feels overwhelming'];
-    } else if (lower.includes('study') || lower.includes('student') || lower.includes('studer')) {
-      updatedProfile.employmentStatus = 'studying';
-      response = `Studying while raising children? That's incredibly ambitious — and there's support specifically for parents who study.\n\nLast question before I look for benefits:\n\nWhat's your biggest challenge right now?`;
-      quickReplies = ['Childcare while studying', 'Tuition costs', 'Living expenses', 'Time management'];
-    } else if (lower.includes('unable') || lower.includes('disabled') || lower.includes('sick') || lower.includes('arbeidsongeschikt')) {
-      updatedProfile.employmentStatus = 'unable';
-      response = `I understand, and I'm sorry you're dealing with health challenges on top of everything else.\n\nThere are specific benefits for people who can't work due to health reasons. Let me make sure I find those for you.\n\nWhat feels most pressing for you right now?`;
-      quickReplies = ['Medical costs', 'Daily living expenses', 'Support for my children', 'Everything feels hard'];
-    } else {
-      response = `Thanks for sharing! Can you tell me a bit about your work situation?`;
-      quickReplies = ['Working full-time', 'Working part-time', 'Looking for work', 'Studying', 'Unable to work'];
-    }
-    return { response, quickReplies, updatedProfile, shouldShowBenefits: false };
-  }
-
-  // Stage: Asking about challenges - this is the final question before recommendations
-  if (stage === 'employment') {
-    // Capture the challenge
-    if (lower.includes('childcare') || lower.includes('opvang')) {
-      updatedProfile.challenges = 'childcare';
-    } else if (lower.includes('healthcare') || lower.includes('zorg') || lower.includes('medical') || lower.includes('insurance')) {
-      updatedProfile.challenges = 'healthcare';
-    } else if (lower.includes('school') || lower.includes('education')) {
-      updatedProfile.challenges = 'education';
-    } else if (lower.includes('everything') || lower.includes('overwhelming') || lower.includes('hard')) {
-      updatedProfile.challenges = 'multiple';
-    } else {
-      updatedProfile.challenges = 'financial';
-    }
-
-    response = `Thank you so much for trusting me with all of this. I know it's not easy to open up, especially about money and struggles.\n\nI've been listening carefully, and I think I have a good picture of your situation now.\n\n**Here's what I'm going to do:**\nI'll look through all the national benefits, local gemeente support, and private funds to find what matches YOUR specific situation.\n\nAre you ready to see what you might qualify for?`;
-    quickReplies = ['Yes, show me!', 'I have more to share first'];
-    return { response, quickReplies, updatedProfile, shouldShowBenefits: false };
-  }
-
-  // Stage: Ready to show benefits
-  if (stage === 'ready') {
-    if (lower.includes('yes') || lower.includes('show') || lower.includes('ready') || lower.includes('ja')) {
-      const matches = calculateBenefitMatches(updatedProfile);
-      shouldShowBenefits = true;
-      
-      if (matches.length > 0) {
-        const topMatch = matches[0];
-        response = `I found **${matches.length} potential benefits** that might be relevant to your situation! 🌻\n\n**Your strongest match:**\n**${topMatch.benefit.name}** (${topMatch.benefit.nameNl})\n${topMatch.benefit.description.split('.')[0]}.\n\n${topMatch.benefit.estimatedAmount ? `💰 Could be worth up to **${topMatch.benefit.estimatedAmount}**` : ''}\n\nI'll show you each one, and you can add the ones you want to your personal checklist. From there, I'll help you understand exactly how to apply.\n\nShall I walk you through your matches?`;
-        quickReplies = ['Walk me through them', 'Show all at once', 'Tell me about ' + topMatch.benefit.name];
+  switch (stage) {
+    case 'greeting':
+      if (lower.includes('yes') || lower.includes('child') || lower.includes('kinderen')) {
+        response = `How many children do you have?`;
+        quickReplies = ['1 child', '2 children', '3 or more'];
       } else {
-        response = `I've looked through everything, and while the standard benefits might not be a perfect fit right now, that doesn't mean there's no help available.\n\nThere might be local gemeente support or private funds that could help. Would you like me to look into those?`;
-        quickReplies = ['Yes, check local support', 'Tell me about private funds'];
+        response = `Hi! I'm Bloom. I help parents find support they're entitled to.\n\nDo you have children?`;
+        quickReplies = ['Yes, I have children', 'No children'];
       }
-    } else if (lower.includes('more') || lower.includes('share') || lower.includes('tell')) {
-      response = `Of course — take your time. What else would you like to share? I'm here to listen.`;
-      quickReplies = ['I have health issues', 'I have debts', 'My situation is complicated', "I'm ready now"];
-    } else {
-      // Continue the conversation
-      response = `I'm still here! Is there anything else you'd like to share, or shall I show you what benefits might be available?`;
-      quickReplies = ['Show me my benefits', 'I have a question', 'Tell me more about you'];
-    }
-    return { response, quickReplies, updatedProfile, shouldShowBenefits };
+      break;
+
+    case 'children':
+      response = `Got it! How old ${updatedProfile.numberOfChildren === 1 ? 'is your child' : 'are they'}?`;
+      quickReplies = ['Baby/toddler (0-4)', 'School age (4-12)', 'Teenager (12-18)', 'Mixed ages'];
+      break;
+
+    case 'ages':
+      response = `Thanks! Are you renting or do you own your home?`;
+      quickReplies = ['Renting privately', 'Social housing', 'Own home', 'Living with family'];
+      break;
+
+    case 'housing':
+      response = `What's your approximate household income per month?`;
+      quickReplies = ['Under €1,500', '€1,500-2,500', '€2,500-3,500', 'Above €3,500'];
+      break;
+
+    case 'income':
+      response = `Are you currently working?`;
+      quickReplies = ['Full-time', 'Part-time', 'Looking for work', 'Studying', 'Unable to work'];
+      break;
+
+    case 'employment':
+      response = `Last question: what's your biggest challenge right now?`;
+      quickReplies = ['Childcare costs', 'Healthcare', 'Making ends meet', 'Everything feels hard'];
+      break;
+
+    case 'ready':
+      if (lower.includes('yes') || lower.includes('show') || lower.includes('ready') || lower.includes('find')) {
+        response = `Perfect! Let me search for benefits that match your situation...`;
+        quickReplies = [];
+        shouldMatch = true;
+      } else {
+        response = `I have enough info to find benefits for you. Ready to see what you might qualify for?`;
+        quickReplies = ['Yes, find my benefits!', 'I have more to share'];
+      }
+      break;
   }
 
-  // Fallback
-  response = `I'm here to help! Could you tell me a bit about your situation? For example, do you have children, and what's your living situation like?`;
-  quickReplies = ['I have children', 'Tell me what you need to know', 'How does this work?'];
-  
-  return { response, quickReplies, updatedProfile, shouldShowBenefits: false };
+  return { response, quickReplies, updatedProfile, shouldMatch };
+}
+
+// Call GreenPT API for AI response
+async function callGreenPT(messages: { role: string; content: string }[]): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke('greenpt-chat', {
+      body: { messages }
+    });
+
+    if (error) {
+      console.error('GreenPT error:', error);
+      return '';
+    }
+
+    return data?.choices?.[0]?.message?.content || '';
+  } catch (err) {
+    console.error('Failed to call GreenPT:', err);
+    return '';
+  }
+}
+
+// Call benefits matching API
+async function callBenefitsMatch(profile: Partial<ParentProfile>): Promise<BenefitMatch[]> {
+  try {
+    // Convert profile to the format expected by the matching API
+    const monthlyIncome = typeof profile.monthlyIncome === 'number' ? profile.monthlyIncome : 2000;
+    const matchProfile = {
+      personal: {
+        age: 30 // Default
+      },
+      financial: {
+        annualIncomeGross: monthlyIncome * 12
+      },
+      children: {
+        numberOfChildren: profile.numberOfChildren || 0,
+        age: Array.isArray(profile.childrenAges) ? profile.childrenAges[0] : 5
+      },
+      housing: {
+        isRenting: profile.housingType === 'rent' || profile.housingType === 'social'
+      },
+      employment: {
+        isEmployed: profile.employmentStatus === 'employed' || profile.employmentStatus === 'part-time'
+      }
+    };
+
+    const { data, error } = await supabase.functions.invoke('benefits-match', {
+      body: matchProfile
+    });
+
+    if (error) {
+      console.error('Benefits match error:', error);
+      return [];
+    }
+
+    // Transform to BenefitMatch format
+    return (data?.matches || []).map((match: any) => ({
+      benefit: {
+        id: match.benefitId,
+        name: match.name,
+        nameNl: match.nameNl || match.name,
+        description: match.description,
+        descriptionNl: match.descriptionNl,
+        category: match.type || 'national',
+        administrator: match.provider,
+        eligibilityCriteria: match.eligibilitySummary || [],
+        applicationUrl: match.applicationUrl,
+        estimatedAmount: match.estimatedAmount,
+        icon: '🌻'
+      },
+      matchScore: match.matchScore || 0.85,
+      matchReasons: match.matchReasons || match.eligibilitySummary || [],
+      missingInfo: []
+    }));
+  } catch (err) {
+    console.error('Failed to match benefits:', err);
+    return [];
+  }
 }
 
 export function useChat() {
@@ -272,6 +250,7 @@ export function useChat() {
   const [profile, setProfile] = useState<Partial<ParentProfile>>({});
   const [benefitMatches, setBenefitMatches] = useState<BenefitMatch[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [conversationHistory, setConversationHistory] = useState<{ role: string; content: string }[]>([]);
 
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: ChatMessage = {
@@ -286,40 +265,82 @@ export function useChat() {
     setIsTyping(true);
     setQuickReplies([]);
 
-    // Natural "thinking" delay
-    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 400));
+    // Update conversation history for API
+    const newHistory = [...conversationHistory, { role: 'user', content }];
+    setConversationHistory(newHistory);
 
-    const { response, quickReplies: newQuickReplies, updatedProfile } = generateResponse(content, profile, messages.length);
+    // Generate local response for structured flow
+    const { response: localResponse, quickReplies: newReplies, updatedProfile, shouldMatch } = 
+      generateLocalResponse(content, profile, messages.length);
 
-    // Simulate typing based on response length
-    const typingDelay = getTypingDelay(response);
-    await new Promise(resolve => setTimeout(resolve, typingDelay));
+    // Try to get AI response for more natural conversation
+    let finalResponse = localResponse;
+    
+    // Only call AI for certain stages or when we need more nuanced responses
+    const stage = getStage(updatedProfile);
+    if (stage === 'ready' && !shouldMatch) {
+      const aiResponse = await callGreenPT(newHistory);
+      if (aiResponse) {
+        finalResponse = aiResponse;
+      }
+    }
 
+    // Simulate natural typing delay
+    await new Promise(resolve => setTimeout(resolve, getTypingDelay(finalResponse)));
     setIsTyping(false);
 
     const assistantMessage: ChatMessage = {
       id: generateId(),
       role: 'assistant',
-      content: response,
+      content: finalResponse,
       timestamp: new Date().toISOString(),
     };
 
     setProfile(updatedProfile);
     setMessages(prev => [...prev, assistantMessage]);
-    setQuickReplies(newQuickReplies);
-    
-    // Update benefit matches
-    const matches = calculateBenefitMatches(updatedProfile);
-    setBenefitMatches(matches);
+    setQuickReplies(newReplies);
+    setConversationHistory(prev => [...prev, { role: 'assistant', content: finalResponse }]);
+
+    // If ready to match, call the benefits matching API
+    if (shouldMatch) {
+      setIsTyping(true);
+      
+      const matches = await callBenefitsMatch(updatedProfile);
+      setBenefitMatches(matches);
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setIsTyping(false);
+
+      const matchResponse = matches.length > 0
+        ? `I found **${matches.length} benefits** you might qualify for! 🌻\n\nYour top match is **${matches[0].benefit.name}** — ${matches[0].benefit.description?.split('.')[0]}.\n\nI'll show you each one. Add the ones you want to your checklist!`
+        : `I couldn't find exact matches right now, but there may be local gemeente support available. Would you like me to look into those?`;
+
+      const matchMessage: ChatMessage = {
+        id: generateId(),
+        role: 'assistant',
+        content: matchResponse,
+        timestamp: new Date().toISOString(),
+        hasRecommendations: matches.length > 0,
+        metadata: {
+          suggestedBenefits: matches
+        }
+      };
+
+      setMessages(prev => [...prev, matchMessage]);
+      setQuickReplies(matches.length > 0 
+        ? ['Tell me more', 'Add all to my list', 'Show next benefit']
+        : ['Check local support', 'Start over']
+      );
+    }
 
     setIsLoading(false);
-  }, [profile]);
+  }, [profile, conversationHistory, messages.length]);
 
   const sendFile = useCallback(async (file: File) => {
     const userMessage: ChatMessage = {
       id: generateId(),
       role: 'user',
-      content: `📎 Shared document: ${file.name}`,
+      content: `📎 Shared: ${file.name}`,
       timestamp: new Date().toISOString(),
     };
 
@@ -328,14 +349,11 @@ export function useChat() {
     setIsTyping(true);
     setQuickReplies([]);
 
-    // Simulate document processing delay
-    await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 800));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const docExplanation = getDocumentExplanation(file.name);
     
-    // Typing delay for response
     await new Promise(resolve => setTimeout(resolve, getTypingDelay(docExplanation.explanation)));
-    
     setIsTyping(false);
 
     const assistantMessage: ChatMessage = {
@@ -351,21 +369,28 @@ export function useChat() {
   }, []);
 
   const addTaskForBenefit = useCallback((benefitId: string) => {
-    const benefit = getBenefitById(benefitId);
+    // First check if it's from the API matches
+    const apiMatch = benefitMatches.find(m => m.benefit.id === benefitId);
+    const benefit = apiMatch?.benefit || getBenefitById(benefitId);
+    
     if (!benefit) return;
 
     const newTask: Task = {
       id: generateId(),
       title: `Apply for ${benefit.name}`,
-      description: `Check eligibility and apply for ${benefit.nameNl} through ${benefit.administrator}`,
+      titleNl: `Aanvragen ${benefit.nameNl}`,
+      description: benefit.description,
       benefitId,
+      benefit,
       status: 'pending',
       priority: 'medium',
       createdAt: new Date().toISOString(),
+      estimatedAmount: benefit.estimatedAmount,
+      applicationUrl: benefit.applicationUrl,
     };
 
     setTasks(prev => [...prev, newTask]);
-  }, []);
+  }, [benefitMatches]);
 
   const toggleTask = useCallback((taskId: string) => {
     setTasks(prev =>
