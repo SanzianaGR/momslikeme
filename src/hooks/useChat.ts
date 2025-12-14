@@ -151,14 +151,9 @@ function generateLocalResponse(userMessage: string, profile: Partial<ParentProfi
       break;
 
     case 'ready':
-      if (lower.includes('yes') || lower.includes('show') || lower.includes('ready') || lower.includes('find')) {
-        response = `Perfect! Let me search for benefits that match your situation...`;
-        quickReplies = [];
-        shouldMatch = true;
-      } else {
-        response = `I have enough info to find benefits for you. Ready to see what you might qualify for?`;
-        quickReplies = ['Yes, find my benefits!', 'I have more to share'];
-      }
+      response = `Thanks for sharing. Let me find what you're entitled to...`;
+      quickReplies = [];
+      shouldMatch = true;
       break;
   }
 
@@ -301,36 +296,33 @@ export function useChat() {
     setQuickReplies(newReplies);
     setConversationHistory(prev => [...prev, { role: 'assistant', content: finalResponse }]);
 
-    // If ready to match, call the benefits matching API
+    // If ready to match, call the benefits matching API (popups will appear automatically)
     if (shouldMatch) {
       setIsTyping(true);
       
       const matches = await callBenefitsMatch(updatedProfile);
-      setBenefitMatches(matches);
-
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsTyping(false);
-
-      const matchResponse = matches.length > 0
-        ? `I found **${matches.length} benefits** you might qualify for! 🌻\n\nYour top match is **${matches[0].benefit.name}** — ${matches[0].benefit.description?.split('.')[0]}.\n\nI'll show you each one. Add the ones you want to your checklist!`
-        : `I couldn't find exact matches right now, but there may be local gemeente support available. Would you like me to look into those?`;
-
-      const matchMessage: ChatMessage = {
+      
+      // Set matches - popups will be triggered in ChatView automatically
+      setBenefitMatches(matches);
+      
+      // Brief follow-up message (no benefit details in chat)
+      const followUp = matches.length > 0
+        ? `I found ${matches.length} options for you. Take a look!`
+        : `I'm still searching... Would you like to talk to a local worker who can help?`;
+      
+      const followUpMessage: ChatMessage = {
         id: generateId(),
         role: 'assistant',
-        content: matchResponse,
+        content: followUp,
         timestamp: new Date().toISOString(),
         hasRecommendations: matches.length > 0,
-        metadata: {
-          suggestedBenefits: matches
-        }
       };
-
-      setMessages(prev => [...prev, matchMessage]);
-      setQuickReplies(matches.length > 0 
-        ? ['Tell me more', 'Add all to my list', 'Show next benefit']
-        : ['Check local support', 'Start over']
-      );
+      
+      setMessages(prev => [...prev, followUpMessage]);
+      setQuickReplies(matches.length === 0 ? ['Yes, connect me', 'No thanks'] : []);
     }
 
     setIsLoading(false);

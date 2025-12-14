@@ -7,6 +7,7 @@ import { QuoteCard } from './QuoteCard';
 import { ChatInputBox } from './ChatInputBox';
 import { SpeechButton } from '@/components/speech/SpeechButton';
 import { BenefitPopup } from './BenefitPopup';
+import { HelpRequestPopup } from '@/components/mybenefits/HelpRequestPopup';
 import { quotes, getRandomQuote } from '@/data/quotes';
 import { CoinDoodle, MoneyBagDoodle, BanknoteDoodle, CoinsStackDoodle } from './HandDrawnElements';
 import { Shield, Users, Home, Heart, ArrowUp } from 'lucide-react';
@@ -40,6 +41,7 @@ export function ChatView({
   const [showBenefitPopup, setShowBenefitPopup] = useState(false);
   const [currentBenefitIndex, setCurrentBenefitIndex] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showHelpPopup, setShowHelpPopup] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   
@@ -49,13 +51,19 @@ export function ChatView({
   // Get a random quote for the hero
   const heroQuote = useMemo(() => getRandomQuote(), []);
 
-  // Show/hide scroll to top button
+  // Show/hide scroll to top button and listen for help request event
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
     };
+    const handleOpenHelp = () => setShowHelpPopup(true);
+    
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('openHelpRequest', handleOpenHelp);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('openHelpRequest', handleOpenHelp);
+    };
   }, []);
 
   const scrollToTop = () => {
@@ -430,6 +438,13 @@ export function ChatView({
           }}
         />
       )}
+
+      {/* Help request popup */}
+      <HelpRequestPopup
+        open={showHelpPopup}
+        onClose={() => setShowHelpPopup(false)}
+        language={language}
+      />
 
       {/* Scroll to top button */}
       {showScrollTop && (
